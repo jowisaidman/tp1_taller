@@ -9,3 +9,14 @@ void get_request(char req[]){
 	if (fgets(req,30,stdin)==NULL) return;
 	req[strcspn ( req, "\n" )] = '\0';
 }
+
+char* read_line(FILE *fp,char line[]){
+	int pos=0;
+	char c;
+	while((c = fgetc(fp)) != '\n') {
+		line[pos] = c;
+		pos++;
+		if (pos>=1000) return NULL;
+	}
+	return line;
+}

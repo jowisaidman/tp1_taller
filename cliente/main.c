@@ -1,4 +1,6 @@
 #define _POSIX_C_SOURCE 200112L
+#define REQUEST_MAX_LEN 128
+#define RESPONSE_MAX_LEN 1024
 
 #include <string.h>
 #include <stdio.h>
@@ -10,13 +12,9 @@
 #include <unistd.h>
 #include "libreria_aux.h"
 
-#define REQUEST_MAX_LEN 128
-#define RESPONSE_MAX_LEN 1024
-
-
 
 int main(int argc, char *argv[]) {
-/*
+	//Consigo el nombre del request
 	FILE* fp = NULL;
 	char req[50];
 	if (argc == 4) { //[1]
@@ -30,9 +28,17 @@ int main(int argc, char *argv[]) {
 		printf("ERROR\n");
 		return 1;
 	}
- 	printf("Se tomo bien el archivo\n");
-*/
-
+	
+	//Leo el request y lo valido (preparo todo para enviar al server)
+	char line[1000];
+	printf("Se leyo la linea: %s\n",read_line(fp,line));
+	
+	
+	
+	
+	
+	
+	//Creo sockets y conecto con el server
 	bool are_we_connected = false;
 	int s = 0;
    	struct addrinfo hints;
@@ -70,7 +76,7 @@ int main(int argc, char *argv[]) {
 	if (are_we_connected == false) {
 		return 1;
 	}
-	printf("FIN");
+	printf("FIN\n");
 	return 0;
 
 }
