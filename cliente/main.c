@@ -15,23 +15,26 @@
 
 int main(int argc, char *argv[]) {
 	//Consigo el nombre del request
-	FILE* fp = NULL;
 	char req[50];
 	if (argc == 4) { //[1]
-		strcpy(req,argv[3]);
+		get_request_param(argv,req);
 	}
 	if (argc < 4) {
-		get_request(req);
+		get_request_stdin(req);
 	}
+	//printf("El req es: %s\n",req);
+	//printf("El largo del req es: %li\n",strlen(req));
+	
+	
+	//Leo el request y lo valido (preparo todo para enviar al server)
 	fp=fopen(req,"r");
 	if ((fp==NULL)) {
 		printf("ERROR\n");
 		return 1;
 	}
 	
-	//Leo el request y lo valido (preparo todo para enviar al server)
-	char line[1000];
-	printf("Se leyo la linea: %s\n",read_line(fp,line));
+	//char line[1000];
+	//printf("Se leyo la linea: %s\n",read_line(fp,line));
 	
 	
 	
