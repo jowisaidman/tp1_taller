@@ -1,58 +1,161 @@
 #define _POSIX_C_SOURCE 200112L
-#include <unistd.h> 
-#include <stdio.h> 
-#include <sys/socket.h> 
-#include <stdlib.h> 
-#include <netinet/in.h> 
-#include <string.h> 
-#define PORT 8080 
-int main(int argc, char const *argv[]) 
-{ 
-    int server_fd, new_socket; 
-    struct sockaddr_in address; 
-    int opt = 1; 
-    int addrlen = sizeof(address); 
-    char buffer[1024] = {0}; 
-    char *hello = "Hello from server"; 
-       
-    // Creating socket file descriptor 
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
-    { 
-        perror("socket failed"); 
-        exit(EXIT_FAILURE); 
-    } 
-       
-    // Forcefully attaching socket to the port 8080 
-    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, 
-                                                  &opt, sizeof(opt))) 
-    { 
-        perror("setsockopt"); 
-        exit(EXIT_FAILURE); 
-    } 
-    address.sin_family = AF_INET; 
-    address.sin_addr.s_addr = INADDR_ANY; 
-    address.sin_port = htons( PORT ); 
-       
-    // Forcefully attaching socket to the port 8080 
-    if (bind(server_fd, (struct sockaddr *)&address,  
-                                 sizeof(address))<0) 
-    { 
-        perror("bind failed"); 
-        exit(EXIT_FAILURE); 
-    } 
-    if (listen(server_fd, 3) < 0) 
-    { 
-        perror("listen"); 
-        exit(EXIT_FAILURE); 
-    } 
-    if ((new_socket = accept(server_fd, (struct sockaddr *)&address,  
-                       (socklen_t*)&addrlen))<0) 
-    { 
-        perror("accept"); 
-        exit(EXIT_FAILURE); 
-    }
-    printf("%s\n",buffer ); 
-    send(new_socket , hello , strlen(hello) , 0 ); 
-    printf("Hello message sent\n"); 
-    return 0; 
-} 
+#define MAX_BUF_LEN 64 
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+
+
+int recv_message(int skt, char *buf, int size) {
+	int received = 0;
+	int s = 0;
+	bool is_the_socket_valid = true;
+
+	while (received < size && is_the_socket_valid) {
+		s = recv(skt, &buf[received], size-received, MSG_NOSIGNAL);
+      
+		if (s == 0) { // nos cerraron el socket :(
+			is_the_socket_valid = false;
+		}
+		else if (s < 0) { // hubo un error >(
+			is_the_socket_valid = false;
+		}
+		else {
+			received += s;
+		}
+	}
+
+	if (is_the_socket_valid) {
+		return received;
+	}
+	else {
+		return -1;
+	}
+}
+	
+int send_message(int skt, char *buf, int size) {
+	int sent = 0;
+	int s = 0;
+	bool is_the_socket_valid = true;
+
+	while (sent < size && is_the_socket_valid) {
+		s = send(skt, &buf[sent], size-sent, MSG_NOSIGNAL);
+      
+		if (s == 0) {
+			is_the_socket_valid = false;
+		}
+		else if (s < 0) {
+			is_the_socket_valid = false;
+		}
+		else {
+			sent += s;
+		}
+	}
+
+	if (is_the_socket_valid) {
+		return sent;
+	}
+	else {
+		return -1;
+	}
+}
+ 
+	
+int main(int argc, char *argv[]) {
+	int s = 0;
+	bool continue_running = true;
+	bool is_the_accept_socket_valid = true;
+   
+	struct addrinfo hints;
+	struct addrinfo *ptr;
+
+	int skt, peerskt = 0;
+
+	char buf[MAX_BUF_LEN];
+	//char *tmp;
+
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET;       /* IPv4 (or AF_INET6 for IPv6)     */
+	hints.ai_socktype = SOCK_STREAM; /* TCP  (or SOCK_DGRAM for UDP)    */
+	hints.ai_flags = AI_PASSIVE;     /* AI_PASSIVE for server           */
+
+	s = getaddrinfo(NULL, argv[1], &hints, &ptr);
+
+	if (s != 0) { 
+		printf("Error in getaddrinfo: %s\n", gai_strerror(s));
+		return 1;
+	}
+
+	skt = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+
+	if (skt == -1) {
+		printf("Error: %s\n", strerror(errno));
+		freeaddrinfo(ptr);
+		return 1;
+	}
+
+	// Activamos la opcion de Reusar la Direccion en caso de que esta
+	// no este disponible por un TIME_WAIT
+	int opt = 1; 
+	s = setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	if (s == -1) {
+		printf("Error: %s\n", strerror(errno));
+		close(skt);
+		freeaddrinfo(ptr);
+		return 1;
+	}
+	
+	// Decimos en que direccion local queremos escuchar, en especial el puerto
+	// De otra manera el sistema operativo elegiria un puerto random
+	// y el cliente no sabria como conectarse
+	//BIND
+	s = bind(skt, ptr->ai_addr, ptr->ai_addrlen);
+	if (s == -1) {
+		printf("Error: %s\n", strerror(errno));
+		close(skt);
+		freeaddrinfo(ptr);
+		return 1;
+	}
+	
+	freeaddrinfo(ptr);
+
+	// Cuanto clientes podemos mantener en espera antes de poder acceptarlos?
+	s = listen(skt, 20);
+	if (s == -1) {
+		printf("Error: %s\n", strerror(errno));
+		close(skt);
+		return 1;
+	}
+   
+	while (continue_running) {
+		peerskt = accept(skt, NULL, NULL);   // aceptamos un cliente
+		if (peerskt == -1) {
+			printf("Error: %s\n", strerror(errno));
+			continue_running = false;
+			is_the_accept_socket_valid = false;
+		}
+		else {
+			printf("New client\n");
+			memset(buf, 0, MAX_BUF_LEN);
+			recv_message(peerskt, buf, MAX_BUF_LEN-1); 
+			printf("El mensaje fue %s\n",buf);
+		}
+		//continue_running = false;	
+	}
+	shutdown(skt, SHUT_RDWR);
+	close(skt);
+
+	if (is_the_accept_socket_valid) {
+		return 1;
+	} 
+	else { 
+		return 0;
+	}
+}
+
