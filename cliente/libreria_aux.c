@@ -17,17 +17,15 @@ void get_request_param(char *argv[],char req[]) {
 		printf("ERROR\n");
 		return;
 	}
-	read_line(fp,req);	
+	read_file(fp,req);
+	fclose(fp);	
 }
 
-char* read_line(FILE *fp,char line[]){
-	int pos=0;
+void read_file(FILE *fp,char line[]) {
 	char c;
-	while((c = fgetc(fp)) != '\n') { //[1]se le deberia pasar un maximo de longitud?
-		//if (pos>=1000) return NULL;[1]
-		if (c==EOF) break;
+	int pos=0;
+	while( (c=fgetc(fp))!=EOF ) {
 		line[pos] = c;
 		pos++;
 	}
-	return line;
 }
