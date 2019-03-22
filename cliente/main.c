@@ -68,7 +68,7 @@ int send_message(int skt, char *buf, int size) {
 void get_request_stdin(char req[]){
 	/*Recibe como parametro una cadena y modifica la misma poniendo
 	 * en ella un request del usuario dado por entrada estandar.*/
-	printf("Enter the path of the file: ");
+	printf("Enter the path of the request: ");
 	if (fgets(req,30,stdin)==NULL) return;
 	req[strcspn ( req, "\n" )] = '\0';
 }
@@ -86,7 +86,7 @@ void get_request_param(char *argv[],char req[]) {
 	FILE* fp = NULL;
 	fp=fopen(argv[3],"r");
 	if ((fp==NULL)) {
-		printf("ERROR\n");
+		printf("Error: the request could not be open\n");
 		return;
 	}
 	read_file(fp,req);
@@ -94,24 +94,29 @@ void get_request_param(char *argv[],char req[]) {
 }
 
 int main(int argc, char *argv[]) {
+	if (argc< 3 || argc > 4) {
+		printf("Error: invalid numer of parameters");
+		return 1;
+	}
+	
 	//Consigo el nombre del request
 	char req[50];
-	char message[200];
 	if (argc == 4) {
 		get_request_param(argv,req);
 	}
-	if (argc < 4) {
+	if (argc == 3) {
 		get_request_stdin(req);
 	}
 	
-	//Leo el request y lo valido (preparo todo para enviar al server)
+	//Leo el request(preparo todo para enviar al server)
 	FILE *fp;
 	printf("%s\n",req);
 	fp=fopen(req,"r");
 	if ((fp==NULL)) {
-		printf("Error al tratar de abrir el archivo con el request\n");
+		printf("Error: the request could not be open\n");
 		return 1;
 	}
+	char message[200];
 	read_file(fp,message);
 	fclose(fp);
 	
@@ -172,18 +177,14 @@ int main(int argc, char *argv[]) {
 		else {
 			bytes_sent += s;
 		}
-		printf("Bytes_sent: %i\n",bytes_sent);
 	}
-	
+	printf("Message send\n");
 	if (is_the_remote_socket_closed || is_there_a_socket_error) {
 		shutdown(skt, SHUT_RDWR);
 		close(skt);
-		printf("Hubo un error en el socket\n");
+		printf("There was an error in the socket\n");
 		return 1;
 	}
-	
-	
-	printf("FIN\n");
 	return 0;
 }
 

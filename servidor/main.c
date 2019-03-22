@@ -65,6 +65,31 @@ int send_message(int skt, char *buf, int size) {
 		return -1;
 	}
 }
+
+void split(char msg[],char delim[],char *list[]) {
+    char *token = strtok(msg, delim);
+    int pos = 0;
+    if(token != NULL){
+        while(token != NULL){
+            printf("Token: %s\n", token);
+            strcpy(list[pos],token);
+            token = strtok(NULL, delim);
+            pos++;
+        }
+    }
+}
+
+
+void parser(char msg[],char http_p[], char action[],char resource[]) {
+	char *list_aux[100];//100 harcodeado
+	char msg_aux[200];
+	char *delim = " \n\r";
+	strcpy(msg_aux,msg);
+	split(msg_aux,delim,list_aux);
+	//strcpy(list_aux[0],action);
+	//strcpy(list_aux[1],resource);
+	//strcpy(list_aux[2],http_p);
+}
  
 	
 int main(int argc, char *argv[]) {
@@ -143,9 +168,19 @@ int main(int argc, char *argv[]) {
 		else {
 			printf("New client\n");
 			memset(buf, 0, MAX_BUF_LEN);
-			recv_message(peerskt, buf, MAX_BUF_LEN-1); 
-			printf("El mensaje fue %s\n",buf);
-		}
+			recv_message(peerskt, buf, MAX_BUF_LEN-1);
+			
+			char action[5];
+			char resourse[20];
+			char http_protocol[10];
+					
+			parser(buf,http_protocol,action,resourse);
+			 
+			/*printf("El mensaje fue %s\n",buf);
+			printf("El accion fue %s\n",action);
+			printf("El resource fue %s\n",resourse);
+			printf("El protocolo_http fue %s\n",http_protocol);
+		*/}
 		//continue_running = false;	
 	}
 	shutdown(skt, SHUT_RDWR);
