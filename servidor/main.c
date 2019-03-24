@@ -5,110 +5,57 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-
+#include "request.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+#include "library_common.h"
 
-
-int recv_message(int skt, char *buf, int size) {
-	int received = 0;
-	int s = 0;
-	bool is_the_socket_valid = true;
-
-	while (received < size && is_the_socket_valid) {
-		s = recv(skt, &buf[received], size-received, MSG_NOSIGNAL);
-      
-		if (s == 0) { // nos cerraron el socket :(
-			is_the_socket_valid = false;
+void parser(char msg[],request_t* req) {
+	if (msg == NULL) return;
+	char *delim = " \n\r:";
+	char *token = strtok(msg, delim);
+	int pos = 0;
+    while(token != NULL){
+        if (pos == 0) set_action(req,token);
+        if (pos == 1) set_resourse(req,token);
+        if (pos == 2) set_http_p(req,token);
+        if (strcmp((const char*)token,"User-Agent")==0) {
+			token = strtok(NULL, delim);
+			set_user_agent(req,token);
 		}
-		else if (s < 0) { // hubo un error >(
-			is_the_socket_valid = false;
-		}
-		else {
-			received += s;
-		}
-	}
-
-	if (is_the_socket_valid) {
-		return received;
-	}
-	else {
-		return -1;
-	}
-}
-	
-int send_message(int skt, char *buf, int size) {
-	int sent = 0;
-	int s = 0;
-	bool is_the_socket_valid = true;
-
-	while (sent < size && is_the_socket_valid) {
-		s = send(skt, &buf[sent], size-sent, MSG_NOSIGNAL);
-      
-		if (s == 0) {
-			is_the_socket_valid = false;
-		}
-		else if (s < 0) {
-			is_the_socket_valid = false;
-		}
-		else {
-			sent += s;
-		}
-	}
-
-	if (is_the_socket_valid) {
-		return sent;
-	}
-	else {
-		return -1;
-	}
-}
-
-void split(char msg[],char delim[],char *list[]) {
-    char *token = strtok(msg, delim);
-    int pos = 0;
-    if(token != NULL){
-        while(token != NULL){
-            printf("Token: %s\n", token);
-            strcpy(list[pos],token);
-            token = strtok(NULL, delim);
-            pos++;
-        }
+        token = strtok(NULL, delim);
+        pos++;
     }
 }
 
-
-void parser(char msg[],char http_p[], char action[],char resource[]) {
-	char *list_aux[100];//100 harcodeado
-	char msg_aux[200];
-	char *delim = " \n\r";
-	strcpy(msg_aux,msg);
-	split(msg_aux,delim,list_aux);
-	//strcpy(list_aux[0],action);
-	//strcpy(list_aux[1],resource);
-	//strcpy(list_aux[2],http_p);
+bool request_is_valid(request_t* req) {
+	const char* action = (const char*)get_action(req);
+	if (strcmp(action,"GET") != 0) return false;
+	const char* resource = (const char*)get_resourse(req);
+	if (strcmp(resource,"/sensor") != 0) return false;
+	const char* http_p = (const char*)get_http_p(req);
+	if (strcmp(http_p,"HTTP/1.1") != 0) return false;
+	return true;
 }
  
 	
 int main(int argc, char *argv[]) {
 	int s = 0;
-	bool continue_running = true;
+	int opt = 1;
 	bool is_the_accept_socket_valid = true;
-   
+    bool continue_running = true;
 	struct addrinfo hints;
 	struct addrinfo *ptr;
-
 	int skt, peerskt = 0;
-
 	char buf[MAX_BUF_LEN];
-	//char *tmp;
+	
 
 	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_INET;       /* IPv4 (or AF_INET6 for IPv6)     */
-	hints.ai_socktype = SOCK_STREAM; /* TCP  (or SOCK_DGRAM for UDP)    */
-	hints.ai_flags = AI_PASSIVE;     /* AI_PASSIVE for server           */
+	hints.ai_family = AF_INET;       
+	hints.ai_socktype = SOCK_STREAM; 
+	hints.ai_flags = AI_PASSIVE;    
 
 	s = getaddrinfo(NULL, argv[1], &hints, &ptr);
 
@@ -124,10 +71,7 @@ int main(int argc, char *argv[]) {
 		freeaddrinfo(ptr);
 		return 1;
 	}
-
-	// Activamos la opcion de Reusar la Direccion en caso de que esta
-	// no este disponible por un TIME_WAIT
-	int opt = 1; 
+ 
 	s = setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 	if (s == -1) {
 		printf("Error: %s\n", strerror(errno));
@@ -136,10 +80,6 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	
-	// Decimos en que direccion local queremos escuchar, en especial el puerto
-	// De otra manera el sistema operativo elegiria un puerto random
-	// y el cliente no sabria como conectarse
-	//BIND
 	s = bind(skt, ptr->ai_addr, ptr->ai_addrlen);
 	if (s == -1) {
 		printf("Error: %s\n", strerror(errno));
@@ -150,16 +90,15 @@ int main(int argc, char *argv[]) {
 	
 	freeaddrinfo(ptr);
 
-	// Cuanto clientes podemos mantener en espera antes de poder acceptarlos?
 	s = listen(skt, 20);
 	if (s == -1) {
 		printf("Error: %s\n", strerror(errno));
 		close(skt);
 		return 1;
 	}
-   
+	
 	while (continue_running) {
-		peerskt = accept(skt, NULL, NULL);   // aceptamos un cliente
+		peerskt = accept(skt, NULL, NULL); 
 		if (peerskt == -1) {
 			printf("Error: %s\n", strerror(errno));
 			continue_running = false;
@@ -169,21 +108,23 @@ int main(int argc, char *argv[]) {
 			printf("New client\n");
 			memset(buf, 0, MAX_BUF_LEN);
 			recv_message(peerskt, buf, MAX_BUF_LEN-1);
+			request_t* req =request_crear();		
+			parser(buf,req);
+			if (!request_is_valid(req)) {
+				printf("The request is invalid\n");
+				continue_running = false;
+			}
+			//aca debo procesar el req y hacer lo necesario
 			
-			char action[5];
-			char resourse[20];
-			char http_protocol[10];
-					
-			parser(buf,http_protocol,action,resourse);
-			 
-			/*printf("El mensaje fue %s\n",buf);
-			printf("El accion fue %s\n",action);
-			printf("El resource fue %s\n",resourse);
-			printf("El protocolo_http fue %s\n",http_protocol);
-		*/}
-		//continue_running = false;	
+			//aca envio respuesta al cliente
+			printf("envio\n");
+			char *ans = (char*)get_http_p(req);
+			printf("%s\n",ans);
+			send_message(peerskt,ans,strlen(ans)-1);
+			shutdown(peerskt, SHUT_RDWR);
+			request_destruir(req);
+		}
 	}
-	shutdown(skt, SHUT_RDWR);
 	close(skt);
 
 	if (is_the_accept_socket_valid) {
@@ -194,3 +135,7 @@ int main(int argc, char *argv[]) {
 	}
 }
 
+/*			printf("llego bien action: %s\n",(char*)get_action(req));
+			printf("llego bien resource: %s\n",(char*)get_resourse(req));
+			printf("llego bien http_p: %s\n",(char*)get_http_p(req));
+			printf("llego bien user agent: %s\n",(char*)get_user_agent(req));*/

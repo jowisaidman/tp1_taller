@@ -10,60 +10,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-
-int recv_message(int skt, char *buf, int size) {
-   int received = 0;
-   int s = 0;
-   bool is_the_socket_valid = true;
-
-   while (received < size && is_the_socket_valid) {
-      s = recv(skt, &buf[received], size-received, MSG_NOSIGNAL);
-      
-      if (s == 0) { // nos cerraron el socket :(
-         is_the_socket_valid = false;
-      }
-      else if (s < 0) { // hubo un error >(
-         is_the_socket_valid = false;
-      }
-      else {
-         received += s;
-      }
-   }
-
-   if (is_the_socket_valid) {
-      return received;
-   }
-   else {
-      return -1;
-   }
-}
-
-int send_message(int skt, char *buf, int size) {
-   int sent = 0;
-   int s = 0;
-   bool is_the_socket_valid = true;
-
-   while (sent < size && is_the_socket_valid) {
-      s = send(skt, &buf[sent], size-sent, MSG_NOSIGNAL);
-      
-      if (s == 0) {
-         is_the_socket_valid = false;
-      }
-      else if (s < 0) {
-         is_the_socket_valid = false;
-      }
-      else {
-         sent += s;
-      }
-   }
-
-   if (is_the_socket_valid) {
-      return sent;
-   }
-   else {
-      return -1;
-   }
-}
+#include "library_common.c"
 
 void get_request_stdin(char req[]){
 	/*Recibe como parametro una cadena y modifica la misma poniendo
@@ -160,31 +107,18 @@ int main(int argc, char *argv[]) {
 		
 	
 	//envio mensaje
-	int request_len = strlen(message);
-	int bytes_sent = 0;
-	while (bytes_sent < request_len && is_there_a_socket_error == false && is_the_remote_socket_closed == false) {
-		s = send(skt, &message[bytes_sent], request_len - bytes_sent, MSG_NOSIGNAL);
-
-		if (s < 0) {  // ups,  hubo un error
-			printf("Error: %s\n", strerror(errno));
-			is_there_a_socket_error = true;
-			return 1;
-		}
-		else if (s == 0) { // nos cerraron el socket :(
-			is_the_remote_socket_closed = true;
-			return 1;
-		}
-		else {
-			bytes_sent += s;
-		}
-	}
-	printf("Message send\n");
+	send_message(skt,message,strlen(message));
+	shutdown(skt, SHUT_WR);
 	if (is_the_remote_socket_closed || is_there_a_socket_error) {
 		shutdown(skt, SHUT_RDWR);
 		close(skt);
 		printf("There was an error in the socket\n");
 		return 1;
 	}
+	//espero respuesta
+	char rta[100];
+	recv_message(skt,rta, RESPONSE_MAX_LEN-1);
+	printf("Answer from server: %s\n",rta);
 	return 0;
 }
 
