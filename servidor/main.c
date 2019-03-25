@@ -40,7 +40,7 @@ bool request_is_valid(request_t* req) {
 	return true;
 }
 
-int read_temp(char *file_name,long int pos) { //ta leyendo mal esto
+int read_temp(char *file_name,long int pos) {
 	FILE *fp;
 	int num_read;
 	if ((fp = fopen(file_name,"rb")) == NULL){
@@ -49,10 +49,22 @@ int read_temp(char *file_name,long int pos) { //ta leyendo mal esto
 	}
 	fseek(fp,pos,SEEK_SET); 
 	if(!fread(&num_read, 1, 2, fp)) return 0;
-	num_read = (num_read & 0x0000ffff);
-	printf("leido: %i\n",num_read);
+	
+	//Magia negra
+	int n1,n2,n3,n4;
+	n1 = (num_read & 0x0000000f);
+	n2 = (num_read & 0x000000f0);
+	n3 = (num_read & 0x00000f00);
+	n4 = (num_read & 0x0000f000);
+	n1 = (n1 << 12);
+	n2 = (n2 << 4);
+	n3 = (n3 >> 4);
+	n4 = (n4 >> 12);
+	num_read = (n1 | n2 | n3 | n4);	
+	printf("Num read luego de todo: %i\n",num_read);
 	return num_read;
 }
+
 
 float get_sensor_temp(char *file_name,long int pos) {
 	int number_read = read_temp(file_name,pos);
