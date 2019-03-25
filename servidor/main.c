@@ -39,17 +39,40 @@ bool request_is_valid(request_t* req) {
 	if (strcmp(http_p,"HTTP/1.1") != 0) return false;
 	return true;
 }
+
+int read_temp(char *file_name,long int pos) { //ta leyendo mal esto
+	FILE *fp;
+	int num_read;
+	if ((fp = fopen(file_name,"rb")) == NULL){
+		printf("Error! opening file");
+		return 0;
+	}
+	fseek(fp,pos,SEEK_SET); 
+	if(!fread(&num_read, 1, 2, fp)) return 0;
+	num_read = (num_read & 0x0000ffff);
+	printf("leido: %i\n",num_read);
+	return num_read;
+}
+
+float get_sensor_temp(char *file_name,long int pos) {
+	int number_read = read_temp(file_name,pos);
+	float temp = ((number_read-2000)/100);
+	return temp;
+}
+ 
  
 	
 int main(int argc, char *argv[]) {
 	int s = 0;
 	int opt = 1;
 	bool is_the_accept_socket_valid = true;
-    bool continue_running = true;
+	bool continue_running = true;
 	struct addrinfo hints;
 	struct addrinfo *ptr;
 	int skt, peerskt = 0;
 	char buf[MAX_BUF_LEN];
+	long int b_pos = 0;
+	float temp = 0;//no deberia empezar en 0
 	
 
 	memset(&hints, 0, sizeof(struct addrinfo));
@@ -105,7 +128,6 @@ int main(int argc, char *argv[]) {
 			is_the_accept_socket_valid = false;
 		}
 		else {
-			printf("New client\n");
 			memset(buf, 0, MAX_BUF_LEN);
 			recv_message(peerskt, buf, MAX_BUF_LEN-1);
 			request_t* req =request_crear();		
@@ -115,14 +137,18 @@ int main(int argc, char *argv[]) {
 				continue_running = false;
 			}
 			//aca debo procesar el req y hacer lo necesario
-			
+			temp = get_sensor_temp(argv[2],b_pos);
+			if (!temp) return 1;
 			//aca envio respuesta al cliente
-			printf("envio\n");
-			char *ans = (char*)get_http_p(req);
-			printf("%s\n",ans);
+			//char ans[100];
+			//sprintf(ans, "La temperatura leida fue: %f",temp);
+			char* ans = "ta ok\n";
 			send_message(peerskt,ans,strlen(ans)-1);
 			shutdown(peerskt, SHUT_RDWR);
 			request_destruir(req);
+			b_pos+=4;
+			printf("Answer OK\n");
+			continue_running = false;
 		}
 	}
 	close(skt);

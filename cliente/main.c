@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 	//espero respuesta
 	char rta[100];
 	recv_message(skt,rta, RESPONSE_MAX_LEN-1);
-	printf("Answer from server: %s\n",rta);
+	printf("%s\n",rta);
 	return 0;
 }
 
