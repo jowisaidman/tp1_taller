@@ -1,6 +1,7 @@
 #include "lista.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 nodo_lista_t* nodo_crear(nodo_lista_t* nuevo_nodo,char* cliente){
 	if(nuevo_nodo==NULL)return NULL;
@@ -24,6 +25,7 @@ bool lista_agregar_cliente(lista_t *lista, char *cliente){
 	if(nuevo_nodo==NULL)return false;
 	if(lista_esta_vacia(lista)){
 		lista->primero = nuevo_nodo;
+		lista->ultimo = nuevo_nodo;
 	} else {
 		lista->ultimo->prox = nuevo_nodo;
 		lista->ultimo = nuevo_nodo;
