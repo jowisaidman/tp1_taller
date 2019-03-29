@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -30,9 +29,9 @@ void read_file(FILE *fp,char line[]) {
 	}
 }
 
-void get_request_param(char *filename,char req[]) {
+void get_request_param(char *argv[],char req[]) {
 	FILE* fp = NULL;
-	fp=fopen(filename,"r");
+	fp=fopen(argv[3],"r");
 	if ((fp==NULL)) {
 		printf("Error: the request could not be open\n");
 		return;
@@ -50,7 +49,7 @@ int main(int argc, char *argv[]) {
 	//Consigo el nombre del request
 	char req[50];
 	if (argc == 4) {
-		get_request_param(argv[3],req);
+		get_request_param(argv,req);
 	}
 	if (argc == 3) {
 		get_request_stdin(req);
@@ -58,12 +57,13 @@ int main(int argc, char *argv[]) {
 	
 	//Leo el request(preparo todo para enviar al server)
 	FILE *fp;
+	printf("%s\n",req);
 	fp=fopen(req,"r");
 	if ((fp==NULL)) {
 		printf("Error: the request could not be open\n");
 		return 1;
 	}
-	char *message = calloc(512,sizeof(char));
+	char message[200];
 	read_file(fp,message);
 	fclose(fp);
 	
@@ -108,7 +108,6 @@ int main(int argc, char *argv[]) {
 	
 	//envio mensaje
 	send_message(skt,message,strlen(message));
-	free(message);
 	shutdown(skt, SHUT_WR);
 	if (is_the_remote_socket_closed || is_there_a_socket_error) {
 		shutdown(skt, SHUT_RDWR);

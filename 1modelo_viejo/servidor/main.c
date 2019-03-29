@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include "library_common.h"
 #include "request.h"
-#include "lista.h"
+#include "buffer.h"
 
 void parser(char msg[],request_t* req) {
 	if (msg == NULL) return;
@@ -41,7 +41,7 @@ bool request_is_valid(request_t* req) {
 	return true;
 }
 
-int read_temp(char *file_name,long int pos,bool *reach_end) {
+int read_temp(char *file_name,long int pos) {
 	FILE *fp;
 	uint16_t s1;
 	if ((fp = fopen(file_name,"rb")) == NULL){
@@ -49,63 +49,39 @@ int read_temp(char *file_name,long int pos,bool *reach_end) {
 		return 0;
 	}
 	fseek(fp,pos,SEEK_SET); 
-	if (!fread(&s1, 2, 1, fp)) {
-		*reach_end=true;
-		fseek(fp,pos-2,SEEK_SET);
-		if(!fread(&s1, 2, 1, fp)) return 0;
-	}
+	if(!fread(&s1, 1, 2, fp)) return 0;
 	s1 = htons(s1);
 	fclose(fp);
-	return s1;
+	return s1; 
 }
 
 
-float get_sensor_temp(char *file_name,long int pos,bool *reach_end) {
-	int number_read = read_temp(file_name,pos,reach_end);
+float get_sensor_temp(char *file_name,long int pos) {
+	int number_read = read_temp(file_name,pos);
 	float temp = ((number_read-2000)/100);
 	return temp;
 }
 
-void parser_template(char buf[],float temp) {
-	if (buf == NULL) return;
-	char *str1 = calloc(strlen(buf),sizeof(char));
-	char *str2 = calloc(strlen(buf),sizeof(char));
-    char *ptr;
-    int pos;
-    int max = strlen(buf);
-    ptr=strstr(buf,"{{datos}}");
-    pos = ptr - buf;
-    for (int i=0; i<pos; i++) {
-		str1[i]=buf[i];
-	}
-	pos+=9;
-	for (int i=0; i<max-pos; i++) {
-		str2[i]=buf[i+pos];
-	}
-	if(!sprintf(buf,"%s%.2f%s",str1,temp,str2)) printf("Error");
-	free(str1);
-	free(str2);
-}
-
-void read_file(FILE *fp,char buf[]) {
+void read_file(FILE *fp,buffer_t *b) {
 	char c;
 	int pos=0;
+	char line[1024];
 	while( (c=fgetc(fp))!=EOF ) {
-		buf[pos] = c;
+		line[pos] = c;
 		pos++;
 		if (pos>=1024) break;
 	}
+	set_data(b,line,pos);
 }
 
-void get_template(char *file_name,float temp,char buf[]) {
+void get_template(char *file_name,float temp,buffer_t *b) {
 	FILE* fp = NULL;
 	fp=fopen(file_name,"r");
 	if ((fp==NULL)) {
 		printf("Error: the request could not be open\n");
 		return;
 	}
-	read_file(fp,buf);
-	parser_template(buf,temp);
+	read_file(fp,b);
 	fclose(fp);
 }
  
@@ -125,8 +101,7 @@ int main(int argc, char *argv[]) {
 	char buf[MAX_BUF_LEN];
 	long int b_pos = 0;
 	float temp = 0;//no deberia empezar en 0
-	lista_t lista_clientes;
-	lista_iter_t lista_iter_clientes; 
+	
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET;       
@@ -173,7 +148,6 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	
-	lista_crear(&lista_clientes);
 	while (continue_running) {
 		peerskt = accept(skt, NULL, NULL); 
 		if (peerskt == -1) {
@@ -190,38 +164,29 @@ int main(int argc, char *argv[]) {
 				printf("The request is invalid\n");
 				continue_running = false;
 			}
-			//Agrego visita al cliente
-			if(!lista_sumar_visita(&lista_clientes,get_user_agent(req))){
-				lista_agregar_cliente(&lista_clientes,get_user_agent(req));
-			}
 			
 			//aca debo procesar el req y preparar el template
-			bool reach_end = false;
-			temp = get_sensor_temp(argv[2],b_pos,&reach_end);
-			if (reach_end) continue_running = false;
+			temp = get_sensor_temp(argv[2],b_pos);
+			if (!temp) return 1;
 			
-			char* buf = calloc(1024,sizeof(char));
-			get_template(argv[3],temp,buf);
-					
+			buffer_t buf;
+			buffer_create(&buf,1024);
+			get_template(argv[3],temp,&buf);
+						
 			//aca envio respuesta al cliente
-			send_message(peerskt,buf,strlen(buf));
+			char* buf_rta = get_data(&buf);
+			size_t size_buf = get_buf_size(&buf);
+			printf("buf enviado: %s\n",buf_rta);
+			send_message(peerskt,buf_rta,size_buf-1);
 			shutdown(peerskt, SHUT_RDWR);
 			request_destruir(req);
-			b_pos+=2;
-			free(buf);
+			buffer_destroy(&buf);
+			b_pos+=4;
+			printf("Answer OK\n");
+			continue_running = false;
 		}
 	}
 	close(skt);
-	lista_iter_crear(&lista_clientes,&lista_iter_clientes);
-	printf("# Estadisticas de visitantes\n\n"); 
-	while (!lista_iter_al_final(&lista_iter_clientes)) {
-		char *cliente = lista_iter_ver_actual_cliente(&lista_iter_clientes);
-		size_t visitas = lista_iter_ver_actual_visitas(&lista_iter_clientes);
-		printf("%s: %li\n",cliente,visitas);
-		lista_iter_avanzar(&lista_iter_clientes);
-	}
-	lista_iter_destruir(&lista_iter_clientes);
-	lista_destruir(&lista_clientes);
 
 	if (is_the_accept_socket_valid) {
 		return 1;
@@ -231,3 +196,7 @@ int main(int argc, char *argv[]) {
 	}
 }
 
+/*			printf("llego bien action: %s\n",(char*)get_action(req));
+			printf("llego bien resource: %s\n",(char*)get_resourse(req));
+			printf("llego bien http_p: %s\n",(char*)get_http_p(req));
+			printf("llego bien user agent: %s\n",(char*)get_user_agent(req));*/

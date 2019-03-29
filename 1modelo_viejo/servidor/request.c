@@ -9,6 +9,7 @@ request_t* request_crear() {
     req->http_p = NULL;
     req->header = NULL;
     req->resourse = NULL;
+    req->host = NULL;
     return req;
 }	
 
@@ -17,6 +18,7 @@ void request_destruir(request_t* req) {
 	if (req->http_p) free(req->http_p);
 	if (req->header) free(req->header);
 	if (req->resourse) free(req->resourse);
+	if (req->host) free(req->host);
 	free(req);
 }
 
@@ -52,6 +54,14 @@ bool set_resourse(request_t* req,char resourse[]) {
 	return true;
 }
 
+bool set_host(request_t* req,char host[]) {
+	if (host == NULL) return false;
+	req->host = (char*)malloc(sizeof(char)*(strlen(host)+1));
+	if (req->host == NULL) return false;
+	strcpy(req->host,host);
+	return true;
+}
+
 void* get_action(request_t* req) {
 	return req->action;	
 }
@@ -66,5 +76,9 @@ void* get_http_p(request_t* req) {
 
 void* get_resourse(request_t* req) {
 	return req->resourse;	
+}
+
+void* get_host(request_t* req) {
+	return req->host;	
 }
 

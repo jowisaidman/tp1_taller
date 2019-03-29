@@ -39,5 +39,3 @@ void* get_resourse(request_t* req);
 
 #endif
 
-
-
