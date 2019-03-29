@@ -18,7 +18,6 @@ void get_request_stdin(char req[]){
 	 * en ella un request del usuario dado por entrada estandar.*/
 	printf("Enter the path of the request: ");
 	if (fgets(req,30,stdin)==NULL) return;
-	req[strcspn ( req, "\n" )] = '\0';
 }
 
 void read_file(FILE *fp,char line[]) {
@@ -48,7 +47,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	//Consigo el nombre del request
-	char req[50];
+	char *req = calloc(512,sizeof(char));
 	if (argc == 4) {
 		get_request_param(argv[3],req);
 	}
@@ -58,7 +57,9 @@ int main(int argc, char *argv[]) {
 	
 	//Leo el request(preparo todo para enviar al server)
 	FILE *fp;
+	req[strcspn ( req, "\n" )] = '\0';
 	fp=fopen(req,"r");
+	free(req);
 	if ((fp==NULL)) {
 		printf("Error: the request could not be open\n");
 		return 1;
