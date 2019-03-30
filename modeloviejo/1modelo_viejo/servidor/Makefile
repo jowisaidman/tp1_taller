@@ -1,10 +1,13 @@
-# Makefile de ejemplo para programa cliente-servidor en C/C++. Genera los ejecutables 'client' y 'server' basados en archivos con el patrón 'client*.(c|cpp)' y 'server*.(c|cpp)' respectivamente. En ambos ejecutables, incluye elementos encontrados en 'common*.(c|cpp)'.
-# Creado: 27/04/2007 - Leandro Lucarella
+# Makefile de ejemplo para C/C++
+# Creado: 15/04/2004 - Leandro Lucarella
 # Modificado: 01/09/2016 - Pablo Roca
 # Copyleft 2004 - Leandro Lucarella, Bajo licencia GPL [http://www.gnu.org/]
 
 # CONFIGURACION
 ################
+
+# Nombre del ejecutable.
+target = tp
 
 # Extensión de los archivos a compilar (c para C, cpp o cc o cxx para C++).
 extension = c
@@ -13,12 +16,10 @@ extension = c
 # toma todos los archivos con la extensión mencionada. Para especificar hay que
 # descomentar la línea (quitarle el '#' del principio).
 # NOTA: No poner cabeceras (.h).
-#fuentes_client = entrada.cpp
-#fuentes_server = entrada.cpp
-#fuentes_common = entrada.cpp
+#fuentes = entrada.cpp
 
 # Si usa funciones de math.h, descomentar (quitar el '#' a) la siguiente línea.
-#math = si
+math = si
 
 # Si usa threads, descomentar (quitar el '#' a) la siguiente línea.
 #threads = si
@@ -100,7 +101,7 @@ endif
 # Se reutilizan los flags de C para C++ también
 CXXFLAGS += $(CFLAGS)
 
-# Se usa enlazador de C++ si es código no C.
+# Se usa enlazador de c++ si es código no C.
 ifeq ($(extension), c)
 CFLAGS += -std=$(CSTD)
 LD = $(CC)
@@ -110,9 +111,7 @@ LD = $(CXX)
 endif
 
 # Si no especifica archivos, tomo todos.
-fuentes_client ?= $(wildcard client*.$(extension))
-fuentes_server ?= $(wildcard server*.$(extension))
-fuentes_common ?= $(wildcard common*.$(extension))
+fuentes ?= $(wildcard *.$(extension))
 directorios = $(shell find . -type d -regex '.*\w+')
 
 occ := $(CC)
@@ -134,30 +133,19 @@ endif
 
 .PHONY: all clean
 
-all: client server
+all: $(target)
 
-o_common_files = $(patsubst %.$(extension),%.o,$(fuentes_common))
-o_client_files = $(patsubst %.$(extension),%.o,$(fuentes_client))
-o_server_files = $(patsubst %.$(extension),%.o,$(fuentes_server))
+o_files = $(patsubst %.$(extension),%.o,$(fuentes))
 
-client: $(o_common_files) $(o_client_files)
-	@if [ -z "$(o_client_files)" ]; \
+$(target): $(o_files)
+	@if [ -z "$(o_files)" ]; \
 	then \
-		echo "No hay archivos de entrada en el directorio actual para el cliente. Recuerde que los archivos deben respetar la forma 'client*.$(extension)' y que no se aceptan directorios anidados."; \
+		echo "No hay archivos de entrada en el directorio actual. Recuerde que la extensión debe ser '.$(extension)' y que no se aceptan directorios anidados."; \
 		if [ -n "$(directorios)" ]; then echo "Directorios encontrados: $(directorios)"; fi; \
 		false; \
 	fi >&2
-	$(LD) $(o_common_files) $(o_client_files) -o client $(LDFLAGS)
-
-server: $(o_common_files) $(o_server_files)
-	@if [ -z "$(o_server_files)" ]; \
-	then \
-		echo "No hay archivos de entrada en el directorio actual para el servidor. Recuerde que los archivos deben respetar la forma 'server*.$(extension)' y que no se aceptan directorios anidados."; \
-		if [ -n "$(directorios)" ]; then echo "Directorios encontrados: $(directorios)"; fi; \
-		false; \
-	fi >&2
-	$(LD) $(o_common_files) $(o_server_files) -o server $(LDFLAGS)
+	$(LD) $(o_files) -o $(target) $(LDFLAGS)
 
 clean:
-	$(RM) -f $(o_common_files) $(o_client_files) $(o_server_files) client server
+	$(RM) $(o_files) $(target)
 
