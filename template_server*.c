@@ -29,7 +29,7 @@ void parser_template(char buf[],float temp) {
 	for (int i=0; i<max-pos; i++) {
 		str2[i]=buf[i+pos];
 	}
-	if(!sprintf(buf,"%s%.2f%s",str1,temp,str2)) printf("Error");
+	if(!snprintf(buf,sizeof(char)*1024,"%s%.2f%s",str1,temp,str2)) printf("Error");
 	free(str1);
 	free(str2);
 }

@@ -33,7 +33,7 @@ bool set_action(request_t* req,char action[]) {
 	if (action == NULL) return false;
 	req->action = (char*)malloc(sizeof(char)*(strlen(action)+1));
 	if (req->action == NULL) return false;
-	strcpy(req->action,action);
+	snprintf(req->action,strlen(action)+1,"%s",action);
 	return true;
 }
 
@@ -41,7 +41,7 @@ bool set_http_p(request_t* req,char http_p[]) {
 	if (http_p == NULL) return false;
 	req->http_p = (char*)malloc(sizeof(char)*(strlen(http_p)+1));
 	if (req->http_p == NULL) return false;
-	strcpy(req->http_p,http_p);
+	snprintf(req->http_p,strlen(http_p)+1,"%s",http_p);
 	return true;
 }
 
@@ -49,7 +49,7 @@ bool set_user_agent(request_t* req,char header[]) {
 	if (header == NULL) return false;
 	req->header = (char*)malloc(sizeof(char)*(strlen(header)+1));
 	if (req->header == NULL) return false;
-	strcpy(req->header,header);
+	snprintf(req->header,strlen(header)+1,"%s",header);
 	return true;
 }
 
@@ -57,7 +57,7 @@ bool set_resourse(request_t* req,char resourse[]) {
 	if (resourse == NULL) return false;
 	req->resourse = (char*)malloc(sizeof(char)*(strlen(resourse)+1));
 	if (req->resourse == NULL) return false;
-	strcpy(req->resourse,resourse);
+	snprintf(req->resourse,strlen(resourse)+1,"%s",resourse);
 	return true;
 }
 
@@ -80,17 +80,16 @@ void* get_resourse(request_t* req) {
 void parser(char msg[],request_t* req) {
 	if (msg == NULL) return;
 	char *delim = " \n\r:";
-	char *token = strtok(msg, delim);
+	char *token;
 	int pos = 0;
-    while(token != NULL){
+    while ((token = strtok_r(msg, delim,&msg))){
         if (pos == 0) set_action(req,token);
         if (pos == 1) set_resourse(req,token);
         if (pos == 2) set_http_p(req,token);
         if (strcmp((const char*)token,"User-Agent")==0) {
-			token = strtok(NULL, delim);
+			token = strtok_r(msg, delim,&msg);
 			set_user_agent(req,token);
 		}
-        token = strtok(NULL, delim);
         pos++;
     }
 }

@@ -22,15 +22,13 @@ int recv_message(int skt, char *buf, int size) {
 		}
 		if (s < 0) {
 			is_the_socket_valid = false;
-		}
-		else {
+		} else {
 			received += s;
 		}
 	}
 	if (is_the_socket_valid) {
 		return received;
-	}
-	else {
+	} else {
 		return -1;
 	}
 }
@@ -45,19 +43,16 @@ int send_message(int skt, char *buf, int size) {
       
 		if (s == 0) {
 			is_the_socket_valid = false;
-		}
-		else if (s < 0) {
+		} else if (s < 0) {
 			is_the_socket_valid = false;
-		}
-		else {
+		} else {
 			sent += s;
 		}
 	}
 
 	if (is_the_socket_valid) {
 		return sent;
-	}
-	else {
+	} else {
 		return -1;
 	}
 }

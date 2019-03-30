@@ -85,8 +85,7 @@ int main(int argc, char *argv[]) {
 			printf("Error: %s\n", strerror(errno));
 			continue_running = false;
 			is_the_accept_socket_valid = false;
-		}
-		else {
+		} else {
 			memset(buf, 0, MAX_BUF_LEN);
 			recv_message(peerskt, buf, MAX_BUF_LEN-1);
 			request_t* req =request_crear();		
@@ -94,16 +93,18 @@ int main(int argc, char *argv[]) {
 			int valid_req = request_is_valid(req);
 			if (valid_req == 404) {
 				request_destruir(req);
-				char *error404 = "HTTP/1.1 404 Not found";
+				char *error404 = "HTTP/1.1 404 Not found\n";
 				send_message(peerskt,error404,strlen(error404));
 				shutdown(peerskt, SHUT_RDWR);
+				continue_running=false;
 				continue;
 			}
 			if (valid_req == 400) {
 				request_destruir(req);
-				char *error400 = "HTTP/1.1 400 Bad request";
+				char *error400 = "HTTP/1.1 400 Bad request\n";
 				send_message(peerskt,error400,strlen(error400));
 				shutdown(peerskt, SHUT_RDWR);
+				continue_running=false;
 				continue;				
 			}
 			//Agrego visita al cliente
@@ -119,7 +120,7 @@ int main(int argc, char *argv[]) {
 			char* buf = calloc(1024,sizeof(char));
 			get_template(argv[3],temp,buf);
 			char respuesta[1024];
-			sprintf(respuesta,"HTTP/1.1 200 OK\n\n%s", buf);		
+			snprintf(respuesta,sizeof(char)*1024,"HTTP/1.1 200 OK\n\n%s", buf);		
 			//aca envio respuesta al cliente
 			send_message(peerskt,respuesta,strlen(respuesta));
 			shutdown(peerskt, SHUT_RDWR);
@@ -134,7 +135,7 @@ int main(int argc, char *argv[]) {
 	while (!lista_iter_al_final(&lista_iter_clientes)) {
 		char *cliente = lista_iter_ver_actual_cliente(&lista_iter_clientes);
 		size_t visitas = lista_iter_ver_actual_visitas(&lista_iter_clientes);
-		printf("* %s: %li\n",cliente,visitas);
+		printf("* %s: %zu\n",cliente,visitas);
 		lista_iter_avanzar(&lista_iter_clientes);
 	}
 	lista_iter_destruir(&lista_iter_clientes);
@@ -142,8 +143,7 @@ int main(int argc, char *argv[]) {
 
 	if (is_the_accept_socket_valid) {
 		return 1;
-	} 
-	else { 
+	} else { 
 		return 0;
 	}
 }

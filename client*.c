@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 	
 	//Leo el request(preparo todo para enviar al server)
 	FILE *fp;
-	req[strcspn ( req, "\n" )] = '\0';
+	req[strcspn(req,"\n")] = '\0';
 	fp=fopen(req,"r");
 	free(req);
 	if ((fp==NULL)) {
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
       		return 1;
    	}
 
-   	for (ptr = result; ptr != NULL && are_we_connected == false; ptr = ptr->ai_next) {
+   	for (ptr = result; ptr!=NULL && !are_we_connected; ptr=ptr->ai_next) {
    		skt = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
       	if (skt == -1) {
          	printf("Error: %s\n", strerror(errno));
@@ -95,7 +95,6 @@ int main(int argc, char *argv[]) {
 	//espero respuesta
 	char rta[512];
 	recv_message(skt,rta, RESPONSE_MAX_LEN-1);
-	printf("%s\n",rta);
 	return 0;
 }
 

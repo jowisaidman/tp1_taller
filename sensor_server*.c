@@ -29,3 +29,4 @@ float get_sensor_temp(char *file_name,long int pos,bool *reach_end) {
 	float temp = ((number_read-2000)/100);
 	return temp;
 }
+

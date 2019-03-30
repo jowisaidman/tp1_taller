@@ -73,7 +73,7 @@ void lista_destruir(lista_t *lista){
 
 bool lista_sumar_visita(lista_t *lista, char *cliente) {
 	nodo_lista_t* nodo_actual = lista->primero;
-	for (int i=0; i<lista->largo;i++) {
+	for (int i=0; i<lista->largo; i++) {
 		char *cliente_actual = nodo_actual->cliente;
 		if (strcmp(cliente_actual,cliente) == 0) {
 			nodo_actual->visitas++;
