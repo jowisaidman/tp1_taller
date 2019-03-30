@@ -37,6 +37,10 @@ void* get_http_p(request_t* req);
 
 void* get_resourse(request_t* req);
 
+void parser(char msg[],request_t* req);
+
+int request_is_valid(request_t* req);
+
 #endif
 
 

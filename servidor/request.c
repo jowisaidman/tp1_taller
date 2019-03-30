@@ -68,3 +68,31 @@ void* get_resourse(request_t* req) {
 	return req->resourse;	
 }
 
+void parser(char msg[],request_t* req) {
+	if (msg == NULL) return;
+	char *delim = " \n\r:";
+	char *token = strtok(msg, delim);
+	int pos = 0;
+    while(token != NULL){
+        if (pos == 0) set_action(req,token);
+        if (pos == 1) set_resourse(req,token);
+        if (pos == 2) set_http_p(req,token);
+        if (strcmp((const char*)token,"User-Agent")==0) {
+			token = strtok(NULL, delim);
+			set_user_agent(req,token);
+		}
+        token = strtok(NULL, delim);
+        pos++;
+    }
+}
+
+int request_is_valid(request_t* req) {
+	const char* action = (const char*)get_action(req);
+	if (strcmp(action,"GET") != 0) return 400;
+	const char* resource = (const char*)get_resourse(req);
+	if (strcmp(resource,"/sensor") != 0) return 404;
+	const char* http_p = (const char*)get_http_p(req);
+	if (strcmp(http_p,"HTTP/1.1") != 0) return 0;
+	return 1;
+}
+

@@ -12,33 +12,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include "library_common.h"
-
-void get_request_stdin(char req[]){
-	/*Recibe como parametro una cadena y modifica la misma poniendo
-	 * en ella un request del usuario dado por entrada estandar.*/
-	printf("Enter the path of the request: ");
-	if (fgets(req,30,stdin)==NULL) return;
-}
-
-void read_file(FILE *fp,char line[]) {
-	char c;
-	int pos=0;
-	while( (c=fgetc(fp))!=EOF ) {
-		line[pos] = c;
-		pos++;
-	}
-}
-
-void get_request_param(char *filename,char req[]) {
-	FILE* fp = NULL;
-	fp=fopen(filename,"r");
-	if ((fp==NULL)) {
-		printf("Error: the request could not be open\n");
-		return;
-	}
-	read_file(fp,req);
-	fclose(fp);	
-}
+#include "requestfile.h"
 
 int main(int argc, char *argv[]) {
 	if (argc< 3 || argc > 4) {
@@ -96,6 +70,7 @@ int main(int argc, char *argv[]) {
          	s = connect(skt, ptr->ai_addr, ptr->ai_addrlen);
 			if (s == -1) {
 				printf("Error: %s\n", strerror(errno));
+				free(message);
 				close(skt);
 			}
 			are_we_connected = (s != -1);
@@ -123,9 +98,4 @@ int main(int argc, char *argv[]) {
 	printf("%s\n",rta);
 	return 0;
 }
-
-//visual studio code
-
-
-
 

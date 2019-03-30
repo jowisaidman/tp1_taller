@@ -12,103 +12,8 @@
 #include "library_common.h"
 #include "request.h"
 #include "lista.h"
-
-void parser(char msg[],request_t* req) {
-	if (msg == NULL) return;
-	char *delim = " \n\r:";
-	char *token = strtok(msg, delim);
-	int pos = 0;
-    while(token != NULL){
-        if (pos == 0) set_action(req,token);
-        if (pos == 1) set_resourse(req,token);
-        if (pos == 2) set_http_p(req,token);
-        if (strcmp((const char*)token,"User-Agent")==0) {
-			token = strtok(NULL, delim);
-			set_user_agent(req,token);
-		}
-        token = strtok(NULL, delim);
-        pos++;
-    }
-}
-
-bool request_is_valid(request_t* req) {
-	const char* action = (const char*)get_action(req);
-	if (strcmp(action,"GET") != 0) return false;
-	const char* resource = (const char*)get_resourse(req);
-	if (strcmp(resource,"/sensor") != 0) return false;
-	const char* http_p = (const char*)get_http_p(req);
-	if (strcmp(http_p,"HTTP/1.1") != 0) return false;
-	return true;
-}
-
-int read_temp(char *file_name,long int pos,bool *reach_end) {
-	FILE *fp;
-	uint16_t s1;
-	if ((fp = fopen(file_name,"rb")) == NULL){
-		printf("Error! opening file");
-		return 0;
-	}
-	fseek(fp,pos,SEEK_SET); 
-	if (!fread(&s1, 2, 1, fp)) {
-		*reach_end=true;
-		fseek(fp,pos-2,SEEK_SET);
-		if(!fread(&s1, 2, 1, fp)) return 0;
-	}
-	s1 = htons(s1);
-	fclose(fp);
-	return s1;
-}
-
-
-float get_sensor_temp(char *file_name,long int pos,bool *reach_end) {
-	int number_read = read_temp(file_name,pos,reach_end);
-	float temp = ((number_read-2000)/100);
-	return temp;
-}
-
-void parser_template(char buf[],float temp) {
-	if (buf == NULL) return;
-	char *str1 = calloc(strlen(buf),sizeof(char));
-	char *str2 = calloc(strlen(buf),sizeof(char));
-    char *ptr;
-    int pos;
-    int max = strlen(buf);
-    ptr=strstr(buf,"{{datos}}");
-    pos = ptr - buf;
-    for (int i=0; i<pos; i++) {
-		str1[i]=buf[i];
-	}
-	pos+=9;
-	for (int i=0; i<max-pos; i++) {
-		str2[i]=buf[i+pos];
-	}
-	if(!sprintf(buf,"%s%.2f%s",str1,temp,str2)) printf("Error");
-	free(str1);
-	free(str2);
-}
-
-void read_file(FILE *fp,char buf[]) {
-	char c;
-	int pos=0;
-	while( (c=fgetc(fp))!=EOF ) {
-		buf[pos] = c;
-		pos++;
-		if (pos>=1024) break;
-	}
-}
-
-void get_template(char *file_name,float temp,char buf[]) {
-	FILE* fp = NULL;
-	fp=fopen(file_name,"r");
-	if ((fp==NULL)) {
-		printf("Error: the request could not be open\n");
-		return;
-	}
-	read_file(fp,buf);
-	parser_template(buf,temp);
-	fclose(fp);
-}
- 
+#include "template.h"
+#include "sensor.h"
 	
 int main(int argc, char *argv[]) {
 	if (argc<4) {
@@ -186,9 +91,20 @@ int main(int argc, char *argv[]) {
 			recv_message(peerskt, buf, MAX_BUF_LEN-1);
 			request_t* req =request_crear();		
 			parser(buf,req);
-			if (!request_is_valid(req)) {
-				printf("The request is invalid\n");
-				continue_running = false;
+			int valid_req = request_is_valid(req);
+			if (valid_req == 404) {
+				request_destruir(req);
+				char *error404 = "HTTP/1.1 404 Not found";
+				send_message(peerskt,error404,strlen(error404));
+				shutdown(peerskt, SHUT_RDWR);
+				continue;
+			}
+			if (valid_req == 400) {
+				request_destruir(req);
+				char *error400 = "HTTP/1.1 400 Bad request";
+				send_message(peerskt,error400,strlen(error400));
+				shutdown(peerskt, SHUT_RDWR);
+				continue;				
 			}
 			//Agrego visita al cliente
 			if(!lista_sumar_visita(&lista_clientes,get_user_agent(req))){
@@ -202,9 +118,10 @@ int main(int argc, char *argv[]) {
 			
 			char* buf = calloc(1024,sizeof(char));
 			get_template(argv[3],temp,buf);
-					
+			char respuesta[1024];
+			sprintf(respuesta,"HTTP/1.1 200 OK\n\n%s", buf);		
 			//aca envio respuesta al cliente
-			send_message(peerskt,buf,strlen(buf));
+			send_message(peerskt,respuesta,strlen(respuesta));
 			shutdown(peerskt, SHUT_RDWR);
 			request_destruir(req);
 			b_pos+=2;
@@ -217,7 +134,7 @@ int main(int argc, char *argv[]) {
 	while (!lista_iter_al_final(&lista_iter_clientes)) {
 		char *cliente = lista_iter_ver_actual_cliente(&lista_iter_clientes);
 		size_t visitas = lista_iter_ver_actual_visitas(&lista_iter_clientes);
-		printf("%s: %li\n",cliente,visitas);
+		printf("* %s: %li\n",cliente,visitas);
 		lista_iter_avanzar(&lista_iter_clientes);
 	}
 	lista_iter_destruir(&lista_iter_clientes);
