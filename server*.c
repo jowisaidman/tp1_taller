@@ -90,23 +90,23 @@ int main(int argc, char *argv[]) {
 			recv_message(peerskt, buf, MAX_BUF_LEN-1);
 			request_t* req =request_crear();		
 			parser(buf,req);
+			
 			int valid_req = request_is_valid(req);
 			if (valid_req == 404) {
 				request_destruir(req);
-				char *error404 = "HTTP/1.1 404 Not found\n";
+				char *error404 = "HTTP/1.1 404 Not found\n\n";
 				send_message(peerskt,error404,strlen(error404));
 				shutdown(peerskt, SHUT_RDWR);
-				continue_running=false;
 				continue;
 			}
 			if (valid_req == 400) {
 				request_destruir(req);
-				char *error400 = "HTTP/1.1 400 Bad request\n";
+				char *error400 = "HTTP/1.1 400 Bad request\n\n";
 				send_message(peerskt,error400,strlen(error400));
 				shutdown(peerskt, SHUT_RDWR);
-				continue_running=false;
 				continue;				
 			}
+			
 			//Agrego visita al cliente
 			if(!lista_sumar_visita(&lista_clientes,get_user_agent(req))){
 				lista_agregar_cliente(&lista_clientes,get_user_agent(req));
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
 			free(buf);
 		}
 	}
-	close(skt);
+	is_the_accept_socket_valid=close(skt);
 	lista_iter_crear(&lista_clientes,&lista_iter_clientes);
 	printf("# Estadisticas de visitantes\n\n"); 
 	while (!lista_iter_al_final(&lista_iter_clientes)) {
@@ -147,4 +147,6 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 }
+
+
 

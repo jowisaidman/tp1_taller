@@ -19,28 +19,27 @@ int main(int argc, char *argv[]) {
 		printf("Error: invalid numer of parameters");
 		return 1;
 	}
-	
 	//Consigo el nombre del request
-	char *req = calloc(512,sizeof(char));
+	char *message = calloc(512,sizeof(char));
 	if (argc == 4) {
-		get_request_param(argv[3],req);
+		FILE *fp;
+		char req[32];
+		memset(req,'\0',32);
+		snprintf(req,sizeof(char)*32,"%s",argv[3]);
+		req[strcspn(req,"\n")]='\0';
+		fp=fopen(req,"r");
+		if ((fp==NULL)) {
+			printf("Error: the request could not be open\n");
+			return 1;
+		}
+		read_file(fp,message);
+		fclose(fp);
 	}
 	if (argc == 3) {
-		get_request_stdin(req);
+		printf("Busco por stdin\n");
+		//get_request_stdin(req);
 	}
-	
-	//Leo el request(preparo todo para enviar al server)
-	FILE *fp;
-	req[strcspn(req,"\n")] = '\0';
-	fp=fopen(req,"r");
-	free(req);
-	if ((fp==NULL)) {
-		printf("Error: the request could not be open\n");
-		return 1;
-	}
-	char *message = calloc(512,sizeof(char));
-	read_file(fp,message);
-	fclose(fp);
+
 	
 	//Creo sockets y conecto con el server
 	bool are_we_connected = false;
@@ -93,8 +92,10 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	//espero respuesta
-	char rta[512];
+	char rta[1024];
+	memset(rta,'\0',1024);
 	recv_message(skt,rta, RESPONSE_MAX_LEN-1);
+	printf("%s",rta);
 	return 0;
 }
 
