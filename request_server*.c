@@ -87,7 +87,7 @@ void parser(char msg[],request_t* req) {
         if (pos == 1) set_resourse(req,token);
         if (pos == 2) set_http_p(req,token);
         if (strcmp((const char*)token,"User-Agent")==0) {
-			token = strtok_r(msg, delim,&msg);
+			token = strtok_r(msg,"\n",&msg);
 			set_user_agent(req,token);
 		}
         pos++;

@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 200112L
-#define MAX_BUF_LEN 64 
+#define MAX_BUF_LEN 512 
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 		} else {
 			memset(buf, 0, MAX_BUF_LEN);
 			recv_message(peerskt, buf, MAX_BUF_LEN-1);
-			request_t* req =request_crear();		
+			request_t* req =request_crear();
 			parser(buf,req);
 			
 			int valid_req = request_is_valid(req);
@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
 	while (!lista_iter_al_final(&lista_iter_clientes)) {
 		char *cliente = lista_iter_ver_actual_cliente(&lista_iter_clientes);
 		size_t visitas = lista_iter_ver_actual_visitas(&lista_iter_clientes);
-		printf("* %s: %zu\n",cliente,visitas);
+		printf("*%s: %zu\n",cliente,visitas);
 		lista_iter_avanzar(&lista_iter_clientes);
 	}
 	lista_iter_destruir(&lista_iter_clientes);
