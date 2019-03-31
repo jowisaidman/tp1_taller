@@ -11,34 +11,36 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "library_common*.c"
-#include "request_file_client*.c"
+#include "library_common.h"
+#include "requestfile.h"
 
 int main(int argc, char *argv[]) {
 	if (argc< 3 || argc > 4) {
 		printf("Error: invalid numer of parameters");
 		return 1;
 	}
+	
 	//Consigo el nombre del request
-	char *message = calloc(512,sizeof(char));
+	char *req = calloc(512,sizeof(char));
 	if (argc == 4) {
-		FILE *fp;
-		char req[32];
-		memset(req,'\0',32);
-		snprintf(req,sizeof(char)*32,"%s",argv[3]);
-		req[strcspn(req,"\n")]='\0';
-		fp=fopen(req,"r");
-		if ((fp==NULL)) {
-			printf("Error: the request could not be open\n");
-			return 1;
-		}
-		read_file(fp,message);
-		fclose(fp);
+		get_request_param(argv[3],req);
 	}
 	if (argc == 3) {
-		get_request_stdin(message);
+		get_request_stdin(req);
 	}
-
+	
+	//Leo el request(preparo todo para enviar al server)
+	FILE *fp;
+	req[strcspn ( req, "\n" )] = '\0';
+	fp=fopen(req,"r");
+	free(req);
+	if ((fp==NULL)) {
+		printf("Error: the request could not be open\n");
+		return 1;
+	}
+	char *message = calloc(512,sizeof(char));
+	read_file(fp,message);
+	fclose(fp);
 	
 	//Creo sockets y conecto con el server
 	bool are_we_connected = false;
@@ -60,7 +62,7 @@ int main(int argc, char *argv[]) {
       		return 1;
    	}
 
-   	for (ptr = result; ptr!=NULL && !are_we_connected; ptr=ptr->ai_next) {
+   	for (ptr = result; ptr != NULL && are_we_connected == false; ptr = ptr->ai_next) {
    		skt = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
       	if (skt == -1) {
          	printf("Error: %s\n", strerror(errno));
@@ -91,10 +93,9 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	//espero respuesta
-	char rta[1024];
-	memset(rta,'\0',1024);
+	char rta[512];
 	recv_message(skt,rta, RESPONSE_MAX_LEN-1);
-	printf("%s",rta);
+	printf("%s\n",rta);
 	return 0;
 }
 

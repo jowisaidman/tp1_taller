@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include "requestfile.h"
 
 void get_request_stdin(char req[]){
 	/*Recibe como parametro una cadena y modifica la misma poniendo

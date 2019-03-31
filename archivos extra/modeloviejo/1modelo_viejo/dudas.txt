@@ -1,0 +1,10 @@
+errores a cambiar:
+-tengo un buffer grande que lee tdoo el archivo y en principio no debebria saber que tan largo sera
+-coidgo usado del tp de ejemplo
+-largo de las funciones main
+-leer el big endian
+-los strcpy que tengo
+-el strcut request usa malloc para el struct dentro del create
+-llegan bytes de mas a la respuesta
+-utilizar el struct buf para la rta
+
