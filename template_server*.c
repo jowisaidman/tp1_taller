@@ -1,48 +1,71 @@
+#define MAX_TEMP_LEN 1024
+
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-void read_file(FILE *fp,char buf[]) {
+typedef struct template {
+	char* contenido;
+	float* temp;
+} template_t;
+
+void crear_template(template_t *template,float temp) {
+	template->contenido = calloc(MAX_TEMP_LEN,sizeof(char));
+	template->temp = (float*)calloc(1, sizeof(int));
+	*template->temp = temp;
+}
+
+void read_file(FILE *fp,template_t *template) {
 	char c;
 	int pos=0;
 	while( (c=fgetc(fp))!=EOF ) {
-		buf[pos] = c;
+		template->contenido[pos] = c;
 		pos++;
-		if (pos>=1024) break;
+		if (pos>=MAX_TEMP_LEN) break;
 	}
 }
 
-void parser_template(char buf[],float temp) {
-	if (buf == NULL) return;
-	char *str1 = calloc(strlen(buf),sizeof(char));
-	char *str2 = calloc(strlen(buf),sizeof(char));
+void parser_template(template_t *template) {
+	char *str1 = calloc(strlen(template->contenido),sizeof(char));
+	char *str2 = calloc(strlen(template->contenido),sizeof(char));
     char *ptr;
     int pos;
-    int max = strlen(buf);
-    ptr=strstr(buf,"{{datos}}");
-    pos = ptr - buf;
+    int max = strlen(template->contenido);
+    const char* remplaza = "{{datos}}";
+    ptr=strstr(template->contenido,remplaza);
+    pos = ptr - template->contenido;
     for (int i=0; i<pos; i++) {
-		str1[i]=buf[i];
+		str1[i]=template->contenido[i];
 	}
-	pos+=9;
+	pos+=strlen(remplaza);
 	for (int i=0; i<max-pos; i++) {
-		str2[i]=buf[i+pos];
+		str2[i]=template->contenido[i+pos];
 	}
-	if(!snprintf(buf,sizeof(char)*1024,"%s%.2f%s",str1,temp,str2)) printf("Error");
+	if(!snprintf(template->contenido,sizeof(char)*1024,"%s%.2f%s",
+	str1,*template->temp,str2)) printf("Error");
 	free(str1);
 	free(str2);
 }
 
-void get_template(char *file_name,float temp,char buf[]) {
+void armar_template(template_t *template,char* file_name) {
 	FILE* fp = NULL;
 	fp=fopen(file_name,"r");
 	if ((fp==NULL)) {
 		printf("Error: the request could not be open\n");
 		return;
 	}
-	read_file(fp,buf);
-	parser_template(buf,temp);
+	read_file(fp,template);
+	parser_template(template);
 	fclose(fp);
 }
 
+void destruir_template(template_t *template) {
+	free(template->contenido);
+	free(template->temp);
+}
+
+char* get_template(template_t *template) {
+	return template->contenido;	
+}
+	

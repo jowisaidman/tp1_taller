@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200112L
 #define MAX_BUF_LEN 512 
+#define MAX_ANS_LEN 512 
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -20,74 +21,58 @@ int main(int argc, char *argv[]) {
 		printf("Incorrect number of parameters\n");
 		return 1;
 	}
-	int s = 0;
-	int opt = 1;
-	bool is_the_accept_socket_valid = true;
-	bool continue_running = true;
-	struct addrinfo hints;
-	struct addrinfo *ptr;
-	int skt, peerskt = 0;
-	char buf[MAX_BUF_LEN];
-	long int b_pos = 0;
+	
+	//seteo variables
+   	char buf[MAX_BUF_LEN];
 	float temp = 0;//no deberia empezar en 0
 	lista_t lista_clientes;
-	lista_iter_t lista_iter_clientes; 
-
-	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_INET;       
-	hints.ai_socktype = SOCK_STREAM; 
-	hints.ai_flags = AI_PASSIVE;    
-
-	s = getaddrinfo(NULL, argv[1], &hints, &ptr);
-
-	if (s != 0) { 
-		printf("Error in getaddrinfo: %s\n", gai_strerror(s));
-		return 1;
-	}
-
-	skt = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-
-	if (skt == -1) {
-		printf("Error: %s\n", strerror(errno));
-		freeaddrinfo(ptr);
-		return 1;
-	}
- 
-	s = setsockopt(skt, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-	if (s == -1) {
-		printf("Error: %s\n", strerror(errno));
-		close(skt);
-		freeaddrinfo(ptr);
+	lista_iter_t lista_iter_clientes;
+	bool is_the_accept_socket_valid = true;
+	bool continue_running = true; 
+	int sensor_pos = 0;
+	
+	//creo socket
+	socket_server_t socket_server;
+   	crear_socket_server(&socket_server);
+   	
+   	//seteo direcciones posibles
+   	if(!addrinfo_socket_server(&socket_server,argv[1])) {
+		destruir_socket_server(&socket_server);
 		return 1;
 	}
 	
-	s = bind(skt, ptr->ai_addr, ptr->ai_addrlen);
-	if (s == -1) {
-		printf("Error: %s\n", strerror(errno));
-		close(skt);
-		freeaddrinfo(ptr);
-		return 1;
+	//seteo socket del servidor
+	if(!skt_socket_server(&socket_server)) {
+		destruir_socket_server(&socket_server);
+		return 1;		
+	} 
+
+	//seteo opciones(LA QUEDE ACA)
+	if(!skt_opciones_server(&socket_server)) {
+		destruir_socket_server(&socket_server);
+		return 1;		
 	}
 	
-	freeaddrinfo(ptr);
-
-	s = listen(skt, 20);
-	if (s == -1) {
-		printf("Error: %s\n", strerror(errno));
-		close(skt);
-		return 1;
+	//bind
+	if (!bind_socket_server(&socket_server)) {
+		destruir_socket_server(&socket_server);
+		return 1;		
+	}
+	
+	//listen
+	if (!listen_socket_server(&socket_server)) {
+		destruir_socket_server(&socket_server);
+		return 1;		
 	}
 	
 	lista_crear(&lista_clientes);
 	while (continue_running) {
-		peerskt = accept(skt, NULL, NULL); 
-		if (peerskt == -1) {
-			printf("Error: %s\n", strerror(errno));
+		is_the_accept_socket_valid = accept_socket_server(&socket_server);
+		if(!is_the_accept_socket_valid) {
 			continue_running = false;
-			is_the_accept_socket_valid = false;
 		} else {
 			memset(buf, 0, MAX_BUF_LEN);
-			recv_message(peerskt, buf, MAX_BUF_LEN-1);
+			recv_msg_socket_server(&socket_server,buf,MAX_BUF_LEN-1);
 			request_t* req =request_crear();
 			parser(buf,req);
 			
@@ -95,15 +80,13 @@ int main(int argc, char *argv[]) {
 			if (valid_req == 404) {
 				request_destruir(req);
 				char *error404 = "HTTP/1.1 404 Not found\n\n";
-				send_message(peerskt,error404,strlen(error404));
-				shutdown(peerskt, SHUT_RDWR);
+				envr_msg_socket_server(&socket_server,error404);
 				continue;
 			}
 			if (valid_req == 400) {
 				request_destruir(req);
 				char *error400 = "HTTP/1.1 400 Bad request\n\n";
-				send_message(peerskt,error400,strlen(error400));
-				shutdown(peerskt, SHUT_RDWR);
+				envr_msg_socket_server(&socket_server,error400);
 				continue;				
 			}
 			
@@ -113,23 +96,33 @@ int main(int argc, char *argv[]) {
 			}
 			
 			//aca debo procesar el req y preparar el template
-			bool reach_end = false;
-			temp = get_sensor_temp(argv[2],b_pos,&reach_end);
-			if (reach_end) continue_running = false;
+			sensor_t sensor;
+			crear_sensor_server(&sensor);
+			temp = get_sensor_temp(&sensor,argv[2],sensor_pos);
+			sensor_pos+=2;
+			if (sensor_reach_end(&sensor)) {
+				continue_running = false;
+			}
 			
-			char* buf = calloc(1024,sizeof(char));
-			get_template(argv[3],temp,buf);
-			char respuesta[1024];
-			snprintf(respuesta,sizeof(char)*1024,"HTTP/1.1 200 OK\n\n%s", buf);		
+			//creo template
+			template_t template_rta;
+			crear_template(&template_rta,temp);
+			armar_template(&template_rta,argv[3]);
+			char respuesta[MAX_ANS_LEN];
+			snprintf(respuesta,sizeof(char)*MAX_ANS_LEN,"HTTP/1.1 200 OK\n\n%s",
+			 get_template(&template_rta));		
 			//aca envio respuesta al cliente
-			send_message(peerskt,respuesta,strlen(respuesta));
-			shutdown(peerskt, SHUT_RDWR);
+			envr_msg_socket_server(&socket_server,respuesta);
 			request_destruir(req);
-			b_pos+=2;
-			free(buf);
+			destruir_template(&template_rta);
+			destruir_sensor_server(&sensor);
 		}
 	}
-	is_the_accept_socket_valid=close(skt);
+	//cierro el socket y lo destruyo
+	is_the_accept_socket_valid = cerrar_socket_server(&socket_server);
+	destruir_socket_server(&socket_server);
+	
+	//muestro visitantes
 	lista_iter_crear(&lista_clientes,&lista_iter_clientes);
 	printf("# Estadisticas de visitantes\n\n"); 
 	while (!lista_iter_al_final(&lista_iter_clientes)) {
@@ -141,6 +134,7 @@ int main(int argc, char *argv[]) {
 	lista_iter_destruir(&lista_iter_clientes);
 	lista_destruir(&lista_clientes);
 
+	//verifico que se cerro bien el socket
 	if (is_the_accept_socket_valid) {
 		return 1;
 	} else { 

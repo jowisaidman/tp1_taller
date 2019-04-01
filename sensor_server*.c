@@ -5,20 +5,29 @@
 #include <stdint.h>
 #include <arpa/inet.h>
 
-int read_temp(char *file_name,long int pos,bool *reach_end) {
+typedef struct sensor {
+    int *esta_al_final;
+} sensor_t;
+
+void crear_sensor_server(sensor_t *sensor) { 
+	sensor->esta_al_final = (int*)calloc(1, sizeof(int));
+	*sensor->esta_al_final = 0;
+}
+
+int read_temp(sensor_t *sensor,char *nombre_arch, int posicion) {
 	FILE *fp;
 	uint16_t s1;
-	if ((fp = fopen(file_name,"rb")) == NULL){
+	if ((fp = fopen(nombre_arch,"rb")) == NULL){
 		printf("Error! opening file");
 		return 0;
 	}
-	fseek(fp,pos+2,SEEK_SET); 
+	fseek(fp,posicion+2,SEEK_SET); 
 	if (!fread(&s1, 2, 1, fp)) {
-		*reach_end=true;
-		fseek(fp,pos,SEEK_SET);
+		*sensor->esta_al_final=1;
+		fseek(fp,posicion,SEEK_SET);
 		if(!fread(&s1, 2, 1, fp)) return 0; /*archivo vacio,asumi que devuelve 0*/
 	} else {
-		fseek(fp,pos,SEEK_SET);
+		fseek(fp,posicion,SEEK_SET);
 		if(!fread(&s1, 2, 1, fp)) return 0;  
 	}
 	s1 = htons(s1);
@@ -26,10 +35,24 @@ int read_temp(char *file_name,long int pos,bool *reach_end) {
 	return s1;
 }
 
-
-float get_sensor_temp(char *file_name,long int pos,bool *reach_end) {
-	int number_read = read_temp(file_name,pos,reach_end);
+float get_sensor_temp(sensor_t *sensor,char *nombre_arch, int posicion) {
+	int number_read = read_temp(sensor,nombre_arch,posicion);
 	float temp = ((number_read-2000.0f)/100.0f);
 	return temp;
 }
+
+int sensor_reach_end(sensor_t *sensor) {
+	return *sensor->esta_al_final;	
+}
+
+void destruir_sensor_server(sensor_t *sensor){
+	free(sensor->esta_al_final);
+}
+
+
+
+
+
+
+
 
