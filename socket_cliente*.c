@@ -137,13 +137,3 @@ void destruir_socket(socket_cliente_t *skt_c) {
 	free(skt_c->skt);
 }
 
-
-
-
-
-
-
-
-
-
-
