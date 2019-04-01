@@ -2,17 +2,9 @@
 #define REQUEST_MAX_LEN 128
 #define RESPONSE_MAX_LEN 1024
 
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
-#include <stdbool.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include "library_common*.c"
 #include "request_file_client*.c"
+#include "socket_cliente*.c"
 
 int main(int argc, char *argv[]) {
 	if (argc< 3 || argc > 4) {
@@ -20,81 +12,45 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 	//Consigo el nombre del request
-	char *message = calloc(512,sizeof(char));
+   	req_cliente_t req;
+   	crear_request(&req);  
 	if (argc == 4) {
-		FILE *fp;
-		char req[32];
-		memset(req,'\0',32);
-		snprintf(req,sizeof(char)*32,"%s",argv[3]);
-		req[strcspn(req,"\n")]='\0';
-		fp=fopen(req,"r");
-		if ((fp==NULL)) {
-			printf("Error: the request could not be open\n");
+		//snprintf(req,sizeof(char)*32,"%s",argv[3]);
+		set_nombre(&req,argv[3]);
+		if(!read_file(&req)) {
+			destruir_request(&req);
 			return 1;
 		}
-		read_file(fp,message);
-		fclose(fp);
 	}
 	if (argc == 3) {
-		get_request_stdin(message);
+		get_request_stdin(&req);
 	}
-
 	
-	//Creo sockets y conecto con el server
-	bool are_we_connected = false;
-	bool is_there_a_socket_error = false;
-	bool is_the_remote_socket_closed = false;
-	int s = 0;
-   	struct addrinfo hints;
-   	struct addrinfo *result, *ptr;
- 	memset(&hints, 0, sizeof(struct addrinfo));
-   	hints.ai_family = AF_INET;     
-   	hints.ai_socktype = SOCK_STREAM; 
-   	hints.ai_flags = 0;              
-   	const char *hostname = argv[1]; 
-  	const char *servicename = argv[2];		
- 	int skt = 0;
-	s = getaddrinfo(hostname, servicename, &hints, &result);
-   	if (s != 0) { 
-      		printf("Error in getaddrinfo: %s\n", gai_strerror(s));
-      		return 1;
-   	}
+	//creo socket
+   	socket_cliente_t socket_cliente;
+   	crear_socket(&socket_cliente);              
 
-   	for (ptr = result; ptr!=NULL && !are_we_connected; ptr=ptr->ai_next) {
-   		skt = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-      	if (skt == -1) {
-         	printf("Error: %s\n", strerror(errno));
-      	} else {
-         	s = connect(skt, ptr->ai_addr, ptr->ai_addrlen);
-			if (s == -1) {
-				printf("Error: %s\n", strerror(errno));
-				free(message);
-				close(skt);
-			}
-			are_we_connected = (s != -1);
-		}
-    }
-	freeaddrinfo(result);
-	if (are_we_connected == false) {
+	//tomo direcciones posibles
+   	if(!addrinfo_socket(&socket_cliente,argv[1],argv[2])) {
+		destruir_request(&req);
+		destruir_socket(&socket_cliente);
 		return 1;
 	}
-		
+
+	//conecto cliente
+	if(!connect_socket(&socket_cliente)) {
+		destruir_request(&req);
+		destruir_socket(&socket_cliente);
+		return 1;
+	}
 	
 	//envio mensaje
-	send_message(skt,message,strlen(message));
-	free(message);
-	shutdown(skt, SHUT_WR);
-	if (is_the_remote_socket_closed || is_there_a_socket_error) {
-		shutdown(skt, SHUT_RDWR);
-		close(skt);
-		printf("There was an error in the socket\n");
-		return 1;
-	}
+	enviar_mensage_socket(&socket_cliente,get_msg(&req));
+	destruir_request(&req);
+	
 	//espero respuesta
-	char rta[1024];
-	memset(rta,'\0',1024);
-	recv_message(skt,rta, RESPONSE_MAX_LEN-1);
-	printf("%s",rta);
+	recibir_mensage_socket(&socket_cliente);
+	destruir_socket(&socket_cliente);
 	return 0;
 }
 

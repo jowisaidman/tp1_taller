@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 200112L
-#define MAX_BUF_LEN 512 
+#define MAX_BUF_LEN 64 
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -9,7 +9,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "socket_server*.c"
+#include "library_common*.c"
 #include "request_server*.c"
 #include "lista_server*.c"
 #include "template_server*.c"
@@ -88,8 +88,13 @@ int main(int argc, char *argv[]) {
 		} else {
 			memset(buf, 0, MAX_BUF_LEN);
 			recv_message(peerskt, buf, MAX_BUF_LEN-1);
-			request_t* req =request_crear();
+			request_t* req =request_crear();		
 			parser(buf,req);
+			
+			//Agrego visita al cliente
+			if(!lista_sumar_visita(&lista_clientes,get_user_agent(req))){
+				lista_agregar_cliente(&lista_clientes,get_user_agent(req));
+			}
 			
 			int valid_req = request_is_valid(req);
 			if (valid_req == 404) {
@@ -105,11 +110,6 @@ int main(int argc, char *argv[]) {
 				send_message(peerskt,error400,strlen(error400));
 				shutdown(peerskt, SHUT_RDWR);
 				continue;				
-			}
-			
-			//Agrego visita al cliente
-			if(!lista_sumar_visita(&lista_clientes,get_user_agent(req))){
-				lista_agregar_cliente(&lista_clientes,get_user_agent(req));
 			}
 			
 			//aca debo procesar el req y preparar el template
@@ -129,13 +129,13 @@ int main(int argc, char *argv[]) {
 			free(buf);
 		}
 	}
-	is_the_accept_socket_valid=close(skt);
+	close(skt);
 	lista_iter_crear(&lista_clientes,&lista_iter_clientes);
 	printf("# Estadisticas de visitantes\n\n"); 
 	while (!lista_iter_al_final(&lista_iter_clientes)) {
 		char *cliente = lista_iter_ver_actual_cliente(&lista_iter_clientes);
 		size_t visitas = lista_iter_ver_actual_visitas(&lista_iter_clientes);
-		printf("*%s: %zu\n",cliente,visitas);
+		printf("* %s: %zu\n",cliente,visitas);
 		lista_iter_avanzar(&lista_iter_clientes);
 	}
 	lista_iter_destruir(&lista_iter_clientes);
@@ -147,6 +147,4 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 }
-
-
 
