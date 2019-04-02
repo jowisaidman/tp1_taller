@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 200112L
-#define MAX_BUF_LEN 512 
+#define MAX_BUF_LEN 1024
 #define MAX_ANS_LEN 512 
 #include <stdio.h>
 #include <errno.h>
@@ -10,11 +10,12 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "socket_server*.c"
-#include "request_server*.c"
-#include "lista_server*.c"
-#include "template_server*.c"
-#include "sensor_server*.c"
+#include "server_TDA_socket_connect.h"
+#include "server_TDA_socket_accept.h"
+#include "server_TDA_request.h"
+#include "server_TDA_lista.h"
+#include "server_TDA_template.h"
+#include "server_TDA_sensor.h"
 	
 int main(int argc, char *argv[]) {
 	if (argc<4) {
@@ -23,7 +24,6 @@ int main(int argc, char *argv[]) {
 	}
 	
 	//seteo variables
-   	char buf[MAX_BUF_LEN];
 	float temp = 0;//no deberia empezar en 0
 	lista_t lista_clientes;
 	lista_iter_t lista_iter_clientes;
@@ -32,47 +32,50 @@ int main(int argc, char *argv[]) {
 	int sensor_pos = 0;
 	
 	//creo socket
-	socket_server_t socket_server;
-   	crear_socket_server(&socket_server);
+	socket_accept_t socket_server;
+   	crear_socket_accept(&socket_server);
    	
    	//seteo direcciones posibles
-   	if(!addrinfo_socket_server(&socket_server,argv[1])) {
-		destruir_socket_server(&socket_server);
+   	if(!addrinfo_socket_accept(&socket_server,argv[1])) {
+		destruir_socket_accept(&socket_server);
 		return 1;
 	}
 	
 	//seteo socket del servidor
-	if(!skt_socket_server(&socket_server)) {
-		destruir_socket_server(&socket_server);
+	if(!skt_socket_accept(&socket_server)) {
+		destruir_socket_accept(&socket_server);
 		return 1;		
 	} 
 
 	//seteo opciones(LA QUEDE ACA)
-	if(!skt_opciones_server(&socket_server)) {
-		destruir_socket_server(&socket_server);
+	if(!skt_opciones_accept(&socket_server)) {
+		destruir_socket_accept(&socket_server);
 		return 1;		
 	}
 	
 	//bind
-	if (!bind_socket_server(&socket_server)) {
-		destruir_socket_server(&socket_server);
+	if (!bind_socket_accept(&socket_server)) {
+		destruir_socket_accept(&socket_server);
 		return 1;		
 	}
 	
 	//listen
-	if (!listen_socket_server(&socket_server)) {
-		destruir_socket_server(&socket_server);
+	if (!listen_socket_accept(&socket_server)) {
+		destruir_socket_accept(&socket_server);
 		return 1;		
 	}
 	
 	lista_crear(&lista_clientes);
 	while (continue_running) {
-		is_the_accept_socket_valid = accept_socket_server(&socket_server);
+		socket_connect_t socket_connect_s;
+		is_the_accept_socket_valid = 
+		accept_socket(&socket_server,&socket_connect_s);
 		if(!is_the_accept_socket_valid) {
 			continue_running = false;
 		} else {
-			memset(buf, 0, MAX_BUF_LEN);
-			recv_msg_socket_server(&socket_server,buf,MAX_BUF_LEN-1);
+			char buf[MAX_BUF_LEN];
+			memset(buf,'\0',MAX_BUF_LEN);	
+			recv_message(&socket_connect_s, buf, MAX_BUF_LEN-1);
 			request_t* req =request_crear();
 			parser(buf,req);
 			
@@ -80,13 +83,13 @@ int main(int argc, char *argv[]) {
 			if (valid_req == 404) {
 				request_destruir(req);
 				char *error404 = "HTTP/1.1 404 Not found\n\n";
-				envr_msg_socket_server(&socket_server,error404);
+				enviar_mensage_socket(&socket_connect_s,error404);
 				continue;
 			}
 			if (valid_req == 400) {
 				request_destruir(req);
 				char *error400 = "HTTP/1.1 400 Bad request\n\n";
-				envr_msg_socket_server(&socket_server,error400);
+				enviar_mensage_socket(&socket_connect_s,error400);
 				continue;				
 			}
 			
@@ -112,15 +115,16 @@ int main(int argc, char *argv[]) {
 			snprintf(respuesta,sizeof(char)*MAX_ANS_LEN,"HTTP/1.1 200 OK\n\n%s",
 			 get_template(&template_rta));		
 			//aca envio respuesta al cliente
-			envr_msg_socket_server(&socket_server,respuesta);
+			enviar_mensage_socket(&socket_connect_s,respuesta);
 			request_destruir(req);
 			destruir_template(&template_rta);
 			destruir_sensor_server(&sensor);
+			destruir_socket(&socket_connect_s);
 		}
 	}
 	//cierro el socket y lo destruyo
-	is_the_accept_socket_valid = cerrar_socket_server(&socket_server);
-	destruir_socket_server(&socket_server);
+	is_the_accept_socket_valid = cerrar_socket_accept(&socket_server);
+	destruir_socket_accept(&socket_server);
 	
 	//muestro visitantes
 	lista_iter_crear(&lista_clientes,&lista_iter_clientes);

@@ -3,8 +3,8 @@
 #define RESPONSE_MAX_LEN 1024
 
 #include <stdlib.h>
-#include "request_file_client*.c"
-#include "socket_cliente*.c"
+#include "client_TDA_request_file.h"
+#include "client_TDA_socket.h"
 
 int main(int argc, char *argv[]) {
 	if (argc< 3 || argc > 4) {
@@ -27,8 +27,8 @@ int main(int argc, char *argv[]) {
 	}
 	
 	//creo socket
-   	socket_cliente_t socket_cliente;
-   	crear_socket(&socket_cliente);              
+   	socket_connect_t socket_cliente;
+   	crear_socket_connect_cliente(&socket_cliente);              
 
 	//tomo direcciones posibles
    	if(!addrinfo_socket(&socket_cliente,argv[1],argv[2])) {
@@ -48,8 +48,11 @@ int main(int argc, char *argv[]) {
 	enviar_mensage_socket(&socket_cliente,get_msg(&req));
 	destruir_request(&req);
 	
-	//espero respuesta
-	recibir_mensage_socket(&socket_cliente);
+	//recibo respuesta
+	char rta[RESPONSE_MAX_LEN];
+	memset(rta,'\0',RESPONSE_MAX_LEN);	
+	recv_message(&socket_cliente, rta, RESPONSE_MAX_LEN-1);
+	printf("%s",rta); 
 	destruir_socket(&socket_cliente);
 	return 0;
 }
