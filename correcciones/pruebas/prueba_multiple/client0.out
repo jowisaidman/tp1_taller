@@ -1,0 +1,24 @@
+El req->msg es: GET /sensor HTTP/1.1
+User-Agent: Wget/1.19.4 (linux-gnu)
+Accept: */*
+Accept-Encoding: identity
+Host: 127.0.0.1:8080
+Connection: Keep-Alive
+
+HTTP/1.1 200 OK
+
+<html>
+    <head>
+    <style>
+        .datos-container {color: #333}
+        .datos-container span {padding: 5px}        
+        .datos {font-weight: bold}
+    </style>
+    </head>
+    <body>
+        <h1>Sensor</h1>
+        <div class="datos-container">
+            <span>Datos leidos:</span><span class="datos">-10.00&#176;C</span>
+        </div>
+    </body>
+</html>
