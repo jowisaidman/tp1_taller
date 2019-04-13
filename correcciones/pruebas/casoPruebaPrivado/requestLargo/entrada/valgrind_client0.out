@@ -1,0 +1,41 @@
+==00:00:00:00.000 24720== Memcheck, a memory error detector
+==00:00:00:00.000 24720== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==00:00:00:00.000 24720== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==00:00:00:00.000 24720== Command: ./client 127.0.0.1 8080 long-request.txt
+==00:00:00:00.000 24720== Parent PID: 24714
+==00:00:00:00.000 24720== 
+==00:00:00:00.621 24720== Conditional jump or move depends on uninitialised value(s)
+==00:00:00:00.621 24720==    at 0x4C32D48: __strlen_sse2 (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==00:00:00:00.621 24720==    by 0x108F77: send_message (common_TDA_socket_connect.c:37)
+==00:00:00:00.621 24720==    by 0x1091AD: enviar_mensaje_socket (common_TDA_socket_connect.c:102)
+==00:00:00:00.621 24720==    by 0x108D2A: main (client.c:48)
+==00:00:00:00.621 24720== 
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== FILE DESCRIPTORS: 5 open at exit.
+==00:00:00:00.707 24720== Open AF_INET socket 4: 127.0.0.1:52716 <-> unbound
+==00:00:00:00.707 24720==    at 0x517DEC7: socket (syscall-template.S:78)
+==00:00:00:00.707 24720==    by 0x109085: connect_socket (common_TDA_socket_connect.c:80)
+==00:00:00:00.707 24720==    by 0x108D13: main (client.c:41)
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== Open file descriptor 3: /home/jowi/Desktop/tp/pruebas/casoPruebaPrivado/requestLargo/entrada/valgrind_client0.out
+==00:00:00:00.707 24720==    <inherited from parent>
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== Open file descriptor 2: /dev/pts/1
+==00:00:00:00.707 24720==    <inherited from parent>
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== Open file descriptor 1: /home/jowi/Desktop/tp/pruebas/casoPruebaPrivado/requestLargo/entrada/client0.out
+==00:00:00:00.707 24720==    <inherited from parent>
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== Open file descriptor 0: /home/jowi/Desktop/tp/pruebas/casoPruebaPrivado/requestLargo/entrada/client0.in
+==00:00:00:00.707 24720==    <inherited from parent>
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== HEAP SUMMARY:
+==00:00:00:00.707 24720==     in use at exit: 0 bytes in 0 blocks
+==00:00:00:00.707 24720==   total heap usage: 8 allocs, 8 frees, 11,646 bytes allocated
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== All heap blocks were freed -- no leaks are possible
+==00:00:00:00.707 24720== 
+==00:00:00:00.707 24720== For counts of detected and suppressed errors, rerun with: -v
+==00:00:00:00.707 24720== Use --track-origins=yes to see where uninitialised values come from
+==00:00:00:00.707 24720== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)

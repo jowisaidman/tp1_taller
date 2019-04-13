@@ -8,6 +8,7 @@
 typedef struct req_cliente {
     char* nombre;
     char* msg;
+    int largo;
 } req_cliente_t;
 
 //Recibe como parametro un puntero de tipo req_cliente_t y pide
