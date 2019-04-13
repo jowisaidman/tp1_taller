@@ -2,6 +2,7 @@
 #define RESPONSE_MAX_LEN 1024
 
 #include "common_TDA_socket_connect.h"
+#include <stdlib.h>
 
 void set_hints_socket(socket_connect_t *skt_c) {
 	memset(&skt_c->hints, 0, sizeof(struct addrinfo));
@@ -10,12 +11,11 @@ void set_hints_socket(socket_connect_t *skt_c) {
 	skt_c->hints.ai_flags = 0;  	
 }
 
-int recv_message(socket_connect_t *skt_c, char *buf) {
+int recv_message(int skt, char *buf,int tam) {
 	int received = 0,s = 0;
-	int size = RESPONSE_MAX_LEN;
 	bool is_the_socket_valid = true;
-	while (received < size && is_the_socket_valid) {
-		s = recv(skt_c->skt, &buf[received], size-received, MSG_NOSIGNAL);
+	while (received < tam && is_the_socket_valid) {
+		s = recv(skt, &buf[received], tam-received, MSG_NOSIGNAL);
 		if (s == 0) {
 			is_the_socket_valid = false;
 		}
@@ -32,22 +32,21 @@ int recv_message(socket_connect_t *skt_c, char *buf) {
 	}
 }
 
-int send_message(socket_connect_t *skt_c, char *buf) {
-	int sent = 0,s = 0;
-	int size = strlen(buf);
+int send_message(int skt, char *buf, int tam) {
+	int enviado = 0,s = 0;
 	bool is_the_socket_valid = true;
-	while (sent < size && is_the_socket_valid) {
-		s = send(skt_c->skt, &buf[sent], size-sent, MSG_NOSIGNAL); 
+	while (enviado < tam && is_the_socket_valid) {
+		s = send(skt, &buf[enviado], tam-enviado, MSG_NOSIGNAL); 
 		if (s == 0) {
 			is_the_socket_valid = false;
 		} else if (s < 0) {
 			is_the_socket_valid = false;
 		} else {
-			sent += s;
+			enviado += s;
 		}
 	}
 	if (is_the_socket_valid) {
-		return sent;
+		return enviado;
 	} else {
 		return -1;
 	}
@@ -99,15 +98,58 @@ bool connect_socket(socket_connect_t *skt_c) {
 }
 
 bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[]) {
-	int send_ok = send_message(skt_c,msg);
+	int tam_total = strlen(msg);
+	int enviado = 0;
+	while (tam_total>enviado) {
+		int enviar = 100;
+		if (tam_total-enviado<100) enviar = tam_total-enviado;
+		char msg_env[enviar];
+		strncpy(msg_env,msg+enviado,enviar);
+		int send_ok = send_message(skt_c->skt,msg_env,enviar);
+		if (send_ok == -1) {
+			shutdown(skt_c->skt, SHUT_RDWR);
+			close(skt_c->skt);
+			printf("There was an error in the socket\n");
+			return false;
+		}
+		enviado+=enviar;
+	}	
 	shutdown(skt_c->skt, SHUT_WR);
-	if (send_ok == -1) {
-		shutdown(skt_c->skt, SHUT_RDWR);
-		close(skt_c->skt);
-		printf("There was an error in the socket\n");
-		return false;
-	}
 	return true;		
+}
+
+bool recibir_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam) {
+	int r = 0;
+	int recibido = 0;
+	while( r != -1) {
+		//char buf_aux[50];
+		//memset(buf_aux,'\0',50);	
+		r = recv_message(skt_c->skt, msg+recibido,50);
+		//for (int i = 0; i<strlen(buf_aux); i++) {
+		//msg[recibido+i]=buf_aux[i];
+		//memcpy(msg+recibido,buf_aux,strlen(buf_aux));
+		//printf("buffer:aux: %s\n",buf_aux);
+		//printf("largo: %li\n",strlen(buf_aux));
+		//}
+		if (recibido>=tam-50) {
+			msg = (char*)realloc(msg,tam*2);
+			tam = tam*2;
+		}
+		recibido += r;
+	}
+/*
+	while (r != -1) {
+		char *buf_aux =calloc(50,sizeof(char));
+		r = recv_message(skt_c->skt, buf_aux,50);
+		memcpy(msg+recibido,buf_aux,strlen(buf_aux)-1);
+		//snprintf(msg+recibido,strlen(buf_aux),"%s%s",msg,buf_aux);
+		printf("EL VALOR DE REV_MSG ES : %i\n",r);
+		printf("ACA RECIBIO EL BUFFFEEEEERRRRRRR: %s\n",msg);
+		recibido += (int)strlen(buf_aux);
+		free(buf_aux);
+	}
+*/	
+	return true;
 }
 
 

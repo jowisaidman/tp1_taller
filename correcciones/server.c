@@ -73,9 +73,10 @@ int main(int argc, char *argv[]) {
 		if(!is_the_accept_socket_valid) {
 			continue_running = false;
 		} else {
-			char buf[MAX_BUF_LEN];
+			//char buf[MAX_BUF_LEN];
+			char *buf = malloc(sizeof(char)*1024);
 			memset(buf,'\0',MAX_BUF_LEN);	
-			recv_message(&socket_connect_s, buf);
+			recibir_mensaje_socket(&socket_connect_s, buf,1024);
 			request_t req; 
 			request_crear(&req);
 			parser(buf,&req);
@@ -114,12 +115,13 @@ int main(int argc, char *argv[]) {
 			armar_template(&template_rta,argv[3]);
 			char respuesta[MAX_ANS_LEN];
 			snprintf(respuesta,sizeof(char)*MAX_ANS_LEN,"HTTP/1.1 200 OK\n\n%s",
-			 get_template(&template_rta));		
+			get_template(&template_rta));	
 			//aca envio respuesta al cliente
 			enviar_mensaje_socket(&socket_connect_s,respuesta);
 			request_destruir(&req);
 			destruir_template(&template_rta);
 			destruir_sensor_server(&sensor);
+			free(buf);
 			destruir_socket(&socket_connect_s);
 		}
 	}

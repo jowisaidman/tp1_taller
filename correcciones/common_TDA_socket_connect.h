@@ -20,7 +20,6 @@ typedef struct socket_connect {
 
 //Recibe por parametro un puntero a socket_connect_t, un string y un int.
 //Espera un mensaje del socket al cual esta conectado
-int recv_message(socket_connect_t *skt_c, char *buf);
 
 //Crea un socket de comunicacion para el cliente
 void crear_socket_connect_cliente(socket_connect_t *skt_c);
@@ -35,6 +34,8 @@ bool connect_socket(socket_connect_t *skt_c);
 //Recibe por parametro un puntero a socket_connect_t, un string y un int.
 //Envia un mensaje al socket el cual esta conectado.
 bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[]);
+
+bool recibir_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam);
 
 void destruir_socket(socket_connect_t *skt_c);
 
