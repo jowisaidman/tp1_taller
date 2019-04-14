@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 				request_destruir(&req);
 				char *error404 = "HTTP/1.1 404 Not found\n\n";
 				free(buf);
-				enviar_mensaje_socket(&socket_connect_s,error404,strlen(error404)-1);
+				enviar_mensaje_socket(&socket_connect_s,error404,strlen(error404));
 				cerrar_canal_escritura(&socket_connect_s);
 				continue;
 			}
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 				request_destruir(&req);
 				char *error400 = "HTTP/1.1 400 Bad request\n\n";
 				free(buf);
-				enviar_mensaje_socket(&socket_connect_s,error400,strlen(error400)-1);
+				enviar_mensaje_socket(&socket_connect_s,error400,strlen(error400));
 				cerrar_canal_escritura(&socket_connect_s);
 				continue;				
 			}
