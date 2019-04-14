@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	//envio mensaje
-	enviar_mensaje_socket(&socket_cliente,get_msg(&req));
+	enviar_mensaje_socket(&socket_cliente,get_msg(&req),get_largo(&req));
 	destruir_request(&req);
 	
 	//recibo respuesta

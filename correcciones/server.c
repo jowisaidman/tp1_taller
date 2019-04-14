@@ -22,14 +22,8 @@ int main(int argc, char *argv[]) {
 		printf("Incorrect number of parameters\n");
 		return 1;
 	}
-	
-	//seteo variables
-	float temp = 0;
-	lista_t lista_clientes;
-	lista_iter_t lista_iter_clientes;
+
 	bool is_the_accept_socket_valid = true;
-	bool continue_running = true; 
-	int sensor_pos = 0;
 	
 	//creo socket
 	socket_accept_t socket_server;
@@ -64,7 +58,11 @@ int main(int argc, char *argv[]) {
 		destruir_socket_accept(&socket_server);
 		return 1;		
 	}
-	
+
+	bool continue_running = true; 
+	int sensor_pos = 0;
+	float temp = 0;
+	lista_t lista_clientes;	
 	lista_crear(&lista_clientes);
 	while (continue_running) {
 		socket_connect_t socket_connect_s;
@@ -130,6 +128,7 @@ int main(int argc, char *argv[]) {
 	destruir_socket_accept(&socket_server);
 	
 	//muestro visitantes
+	lista_iter_t lista_iter_clientes;
 	lista_iter_crear(&lista_clientes,&lista_iter_clientes);
 	printf("# Estadisticas de visitantes\n\n"); 
 	while (!lista_iter_al_final(&lista_iter_clientes)) {

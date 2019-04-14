@@ -27,5 +27,7 @@ char* get_msg(req_cliente_t *req);
 //libera la memoria.
 void destruir_request(req_cliente_t *req);
 
+int get_largo(req_cliente_t *req);
+
 #endif
 

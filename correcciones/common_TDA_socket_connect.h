@@ -39,7 +39,5 @@ bool recibir_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam);
 
 void destruir_socket(socket_connect_t *skt_c);
 
-int get_largo(req_cliente_t *req);
-
 #endif
 
