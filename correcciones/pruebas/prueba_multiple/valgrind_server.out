@@ -1,49 +1,49 @@
-==00:00:00:00.000 2754== Memcheck, a memory error detector
-==00:00:00:00.000 2754== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==00:00:00:00.000 2754== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
-==00:00:00:00.000 2754== Command: ./server 8080 sensor-multi.bin template.html
-==00:00:00:00.000 2754== Parent PID: 2752
-==00:00:00:00.000 2754== 
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== FILE DESCRIPTORS: 8 open at exit.
-==00:00:00:03.781 2754== Open AF_INET socket 8: 127.0.0.1:8080 <-> unbound
-==00:00:00:03.781 2754==    at 0x4E4D6A1: accept (accept.c:26)
-==00:00:00:03.781 2754==    by 0x10A88F: accept_socket (server_TDA_socket_accept.c:76)
-==00:00:00:03.781 2754==    by 0x108FDB: main (string_fortified.h:71)
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== Open AF_INET socket 7: 127.0.0.1:8080 <-> unbound
-==00:00:00:03.781 2754==    at 0x4E4D6A1: accept (accept.c:26)
-==00:00:00:03.781 2754==    by 0x10A88F: accept_socket (server_TDA_socket_accept.c:76)
-==00:00:00:03.781 2754==    by 0x108FDB: main (string_fortified.h:71)
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== Open AF_INET socket 6: 127.0.0.1:8080 <-> unbound
-==00:00:00:03.781 2754==    at 0x4E4D6A1: accept (accept.c:26)
-==00:00:00:03.781 2754==    by 0x10A88F: accept_socket (server_TDA_socket_accept.c:76)
-==00:00:00:03.781 2754==    by 0x108FDB: main (string_fortified.h:71)
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== Open AF_INET socket 5: 127.0.0.1:8080 <-> unbound
-==00:00:00:03.781 2754==    at 0x4E4D6A1: accept (accept.c:26)
-==00:00:00:03.781 2754==    by 0x10A88F: accept_socket (server_TDA_socket_accept.c:76)
-==00:00:00:03.781 2754==    by 0x108FDB: main (string_fortified.h:71)
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== Open file descriptor 3: /home/jowi/Desktop/tp1_taller/correcciones/pruebas/prueba_multiple/valgrind_server.out
-==00:00:00:03.781 2754==    <inherited from parent>
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== Open file descriptor 2: /home/jowi/Desktop/tp1_taller/correcciones/pruebas/prueba_multiple/__server_stderr__
-==00:00:00:03.781 2754==    <inherited from parent>
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== Open file descriptor 1: /home/jowi/Desktop/tp1_taller/correcciones/pruebas/prueba_multiple/__server_stdout__
-==00:00:00:03.781 2754==    <inherited from parent>
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== Open file descriptor 0: /dev/null
-==00:00:00:03.781 2754==    <inherited from parent>
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== HEAP SUMMARY:
-==00:00:00:03.781 2754==     in use at exit: 0 bytes in 0 blocks
-==00:00:00:03.781 2754==   total heap usage: 58 allocs, 58 frees, 48,836 bytes allocated
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== All heap blocks were freed -- no leaks are possible
-==00:00:00:03.781 2754== 
-==00:00:00:03.781 2754== For counts of detected and suppressed errors, rerun with: -v
-==00:00:00:03.781 2754== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==00:00:00:00.000 8532== Memcheck, a memory error detector
+==00:00:00:00.000 8532== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==00:00:00:00.000 8532== Using Valgrind-3.13.0 and LibVEX; rerun with -h for copyright info
+==00:00:00:00.000 8532== Command: ./server 8080 sensor-multi.bin template.html
+==00:00:00:00.000 8532== Parent PID: 8530
+==00:00:00:00.000 8532== 
+==00:00:00:03.786 8532== 
+==00:00:00:03.786 8532== FILE DESCRIPTORS: 8 open at exit.
+==00:00:00:03.786 8532== Open AF_INET socket 8: 127.0.0.1:8080 <-> unbound
+==00:00:00:03.786 8532==    at 0x4E4D6A1: accept (accept.c:26)
+==00:00:00:03.787 8532==    by 0x10A99F: accept_socket (server_TDA_socket_accept.c:76)
+==00:00:00:03.787 8532==    by 0x109031: main (server.c:71)
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== Open AF_INET socket 7: 127.0.0.1:8080 <-> unbound
+==00:00:00:03.787 8532==    at 0x4E4D6A1: accept (accept.c:26)
+==00:00:00:03.787 8532==    by 0x10A99F: accept_socket (server_TDA_socket_accept.c:76)
+==00:00:00:03.787 8532==    by 0x109031: main (server.c:71)
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== Open AF_INET socket 6: 127.0.0.1:8080 <-> unbound
+==00:00:00:03.787 8532==    at 0x4E4D6A1: accept (accept.c:26)
+==00:00:00:03.787 8532==    by 0x10A99F: accept_socket (server_TDA_socket_accept.c:76)
+==00:00:00:03.787 8532==    by 0x109031: main (server.c:71)
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== Open AF_INET socket 5: 127.0.0.1:8080 <-> unbound
+==00:00:00:03.787 8532==    at 0x4E4D6A1: accept (accept.c:26)
+==00:00:00:03.787 8532==    by 0x10A99F: accept_socket (server_TDA_socket_accept.c:76)
+==00:00:00:03.787 8532==    by 0x109031: main (server.c:71)
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== Open file descriptor 3: /home/jowi/Desktop/correcciones/pruebas/prueba_multiple/valgrind_server.out
+==00:00:00:03.787 8532==    <inherited from parent>
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== Open file descriptor 2: /home/jowi/Desktop/correcciones/pruebas/prueba_multiple/__server_stderr__
+==00:00:00:03.787 8532==    <inherited from parent>
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== Open file descriptor 1: /home/jowi/Desktop/correcciones/pruebas/prueba_multiple/__server_stdout__
+==00:00:00:03.787 8532==    <inherited from parent>
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== Open file descriptor 0: /dev/null
+==00:00:00:03.787 8532==    <inherited from parent>
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== HEAP SUMMARY:
+==00:00:00:03.787 8532==     in use at exit: 0 bytes in 0 blocks
+==00:00:00:03.787 8532==   total heap usage: 62 allocs, 62 frees, 52,932 bytes allocated
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== All heap blocks were freed -- no leaks are possible
+==00:00:00:03.787 8532== 
+==00:00:00:03.787 8532== For counts of detected and suppressed errors, rerun with: -v
+==00:00:00:03.787 8532== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

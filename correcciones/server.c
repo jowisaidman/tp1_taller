@@ -85,13 +85,13 @@ int main(int argc, char *argv[]) {
 			if (valid_req == 404) {
 				request_destruir(&req);
 				char *error404 = "HTTP/1.1 404 Not found\n\n";
-				enviar_mensaje_socket(&socket_connect_s,error404);
+				enviar_mensaje_socket(&socket_connect_s,error404,strlen(error404));
 				continue;
 			}
 			if (valid_req == 400) {
 				request_destruir(&req);
 				char *error400 = "HTTP/1.1 400 Bad request\n\n";
-				enviar_mensaje_socket(&socket_connect_s,error400);
+				enviar_mensaje_socket(&socket_connect_s,error400,strlen(error400));
 				continue;				
 			}
 			
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
 			snprintf(respuesta,sizeof(char)*MAX_ANS_LEN,"HTTP/1.1 200 OK\n\n%s",
 			get_template(&template_rta));	
 			//aca envio respuesta al cliente
-			enviar_mensaje_socket(&socket_connect_s,respuesta);
+			enviar_mensaje_socket(&socket_connect_s,respuesta,strlen(respuesta));
 			request_destruir(&req);
 			destruir_template(&template_rta);
 			destruir_sensor_server(&sensor);

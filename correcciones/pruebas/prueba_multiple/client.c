@@ -45,15 +45,17 @@ int main(int argc, char *argv[]) {
 	}
 	
 	//envio mensaje
-	enviar_mensaje_socket(&socket_cliente,get_msg(&req));
+	enviar_mensaje_socket(&socket_cliente,get_msg(&req),get_largo(&req));
 	destruir_request(&req);
 	
 	//recibo respuesta
-	char rta[RESPONSE_MAX_LEN];
+	//char rta[RESPONSE_MAX_LEN];
+	char *rta = malloc(sizeof(char)*1024);
 	memset(rta,'\0',RESPONSE_MAX_LEN);	
-	recv_message(&socket_cliente, rta);
+	recibir_mensaje_socket(&socket_cliente, rta,1024);
 	printf("%s",rta); 
 	destruir_socket(&socket_cliente);
+	free(rta);
 	return 0;
 }
 

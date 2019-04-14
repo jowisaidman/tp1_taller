@@ -33,11 +33,13 @@ bool connect_socket(socket_connect_t *skt_c);
 
 //Recibe por parametro un puntero a socket_connect_t, un string y un int.
 //Envia un mensaje al socket el cual esta conectado.
-bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[]);
+bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam);
 
 bool recibir_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam);
 
 void destruir_socket(socket_connect_t *skt_c);
+
+int get_largo(req_cliente_t *req);
 
 #endif
 

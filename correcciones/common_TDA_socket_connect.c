@@ -97,8 +97,7 @@ bool connect_socket(socket_connect_t *skt_c) {
 	return true;
 }
 
-bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[]) {
-	int tam_total = strlen(msg);
+bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam_total) {
 	int enviado = 0;
 	while (tam_total>enviado) {
 		int enviar = 100;
