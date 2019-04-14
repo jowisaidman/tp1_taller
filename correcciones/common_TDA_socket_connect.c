@@ -1,5 +1,5 @@
 #define _POSIX_C_SOURCE 200112L
-#define RESPONSE_MAX_LEN 1024
+#define TAM_INICIAL 1024
 
 #include "common_TDA_socket_connect.h"
 #include <stdlib.h>
@@ -102,7 +102,7 @@ bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam_total) {
 	while (tam_total>enviado) {
 		int enviar = 100;
 		if (tam_total-enviado<100) enviar = tam_total-enviado;
-		char msg_env[enviar];
+		char msg_env[100];
 		strncpy(msg_env,msg+enviado,enviar);
 		int send_ok = send_message(skt_c->skt,msg_env,enviar);
 		if (send_ok == -1) {
@@ -112,42 +112,25 @@ bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam_total) {
 			return false;
 		}
 		enviado+=enviar;
-	}	
-	shutdown(skt_c->skt, SHUT_WR);
+	}
 	return true;		
+}
+
+void cerrar_canal_escritura(socket_connect_t *skt_c) {
+	shutdown(skt_c->skt, SHUT_WR);
 }
 
 bool recibir_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam) {
 	int r = 0;
 	int recibido = 0;
-	while( r != -1) {
-		//char buf_aux[50];
-		//memset(buf_aux,'\0',50);	
+	while (r != -1) {
 		r = recv_message(skt_c->skt, msg+recibido,50);
-		//for (int i = 0; i<strlen(buf_aux); i++) {
-		//msg[recibido+i]=buf_aux[i];
-		//memcpy(msg+recibido,buf_aux,strlen(buf_aux));
-		//printf("buffer:aux: %s\n",buf_aux);
-		//printf("largo: %li\n",strlen(buf_aux));
-		//}
 		if (recibido>=tam-50) {
 			msg = (char*)realloc(msg,tam*2);
 			tam = tam*2;
 		}
 		recibido += r;
 	}
-/*
-	while (r != -1) {
-		char *buf_aux =calloc(50,sizeof(char));
-		r = recv_message(skt_c->skt, buf_aux,50);
-		memcpy(msg+recibido,buf_aux,strlen(buf_aux)-1);
-		//snprintf(msg+recibido,strlen(buf_aux),"%s%s",msg,buf_aux);
-		printf("EL VALOR DE REV_MSG ES : %i\n",r);
-		printf("ACA RECIBIO EL BUFFFEEEEERRRRRRR: %s\n",msg);
-		recibido += (int)strlen(buf_aux);
-		free(buf_aux);
-	}
-*/	
 	return true;
 }
 

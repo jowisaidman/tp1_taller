@@ -1,9 +1,0 @@
-GET /sensor HTTP/1.1
-Host: http://localhost:8080
-User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:65.0) Gecko/20100101 Firefox/65.0
-Accept: */*
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate, br
-Referer: http://localhost:8080/
-Connection: close
-Cookie: fr=AcaHabiaUnaCookieRealPeroLaEstoyPisando.b-kJw8nrXOjkuVA.BccZu_.Jn.FyW.0.0.BcnCsp.AWWsQpc6; sb=v5txXFriOCcmDUzG5J6dxuOi; datr=v5txXNrI8i2zMMEK2yASjn8B; c_user=607159333; xs=40%3Aka74ZRBs5uM_tw%3A2%3A1550949350%3A15672%3A15936; pl=n; wd=1920x478; act=1553738545247%2F1; spin=r.1000539655_b.trunk_t.1553738534_s.1_v.2_; presence=EDvF3EtimeF1553739400EuserFA2607159333A2EstateFDsb2F1553388749566EatF1553399723625Et3F_5bDiFA2user_3a1B02749488737A2EoF1EfF1C_5dEutc3F1553388749702G553739400404CEchFDp_5f607159333F4CC

@@ -41,7 +41,7 @@ bool leer_archivo(req_cliente_t *req) {
 		req->msg[pos] = c;
 		pos++;
 	}
-	req->msg[pos+1] = '\0'; //puede llegar a romper si justo pos estaba en el ultimo lugar, deberia corregirlo junto con la funcoin agrandar_msg
+	req->msg[pos+1] = '\0'; 
 	req->largo = pos;
 	if (entrada != stdin) fclose(entrada);
 	return true;

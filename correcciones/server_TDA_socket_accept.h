@@ -33,9 +33,7 @@ bool listen_socket_accept(socket_accept_t *skt_s);
 
 bool accept_socket(socket_accept_t *skt_s,socket_connect_t *skt_c);
 
-int cerrar_socket_accept(socket_accept_t *skt_s);
-
-void destruir_socket_accept(socket_accept_t *skt_s);
+bool destruir_socket_accept(socket_accept_t *skt_s);
 
 #endif
 

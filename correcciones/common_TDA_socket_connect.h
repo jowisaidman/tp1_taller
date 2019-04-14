@@ -18,8 +18,6 @@ typedef struct socket_connect {
     struct addrinfo *ptr;
 } socket_connect_t;
 
-//Recibe por parametro un puntero a socket_connect_t, un string y un int.
-//Espera un mensaje del socket al cual esta conectado
 
 //Crea un socket de comunicacion para el cliente
 void crear_socket_connect_cliente(socket_connect_t *skt_c);
@@ -38,6 +36,8 @@ bool enviar_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam);
 bool recibir_mensaje_socket(socket_connect_t *skt_c,char msg[],int tam);
 
 void destruir_socket(socket_connect_t *skt_c);
+
+void cerrar_canal_escritura(socket_connect_t *skt_c); 
 
 #endif
 

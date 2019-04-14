@@ -1,12 +1,10 @@
 #define _POSIX_C_SOURCE 200112L
-#define REQUEST_MAX_LEN 128
-#define RESPONSE_MAX_LEN 1024
 
 #include "server_TDA_socket_accept.h"
 
 void crear_socket_accept(socket_accept_t *skt_s) { 
-	skt_s->s = 0;
-	skt_s->skt = 0;
+	skt_s->s = -1;
+	skt_s->skt = -1;
 	skt_s->opt = 1;
 }
 
@@ -82,12 +80,11 @@ bool accept_socket(socket_accept_t *skt_s,socket_connect_t *skt_c) {
 	return true; 
 }
 
-int cerrar_socket_accept(socket_accept_t *skt_s){
-	return close(skt_s->skt);
-} 
-
-void destruir_socket_accept(socket_accept_t *skt_s) {
-	//No hace nada
+bool destruir_socket_accept(socket_accept_t *skt_s) {
+	bool respuesta = close(skt_s->skt);
+	skt_s->s = -1;
+	skt_s->skt = -1;
+	return respuesta;	
 }
 
 

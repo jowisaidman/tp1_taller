@@ -1,6 +1,5 @@
 #define _POSIX_C_SOURCE 200112L
-#define REQUEST_MAX_LEN 128
-#define RESPONSE_MAX_LEN 1024
+#define TAM_INICIAL 1024
 
 #include <stdlib.h>
 #include "client_TDA_request_file.h"
@@ -46,12 +45,12 @@ int main(int argc, char *argv[]) {
 	
 	//envio mensaje
 	enviar_mensaje_socket(&socket_cliente,get_msg(&req),get_largo(&req));
+	cerrar_canal_escritura(&socket_cliente);
 	destruir_request(&req);
 	
 	//recibo respuesta
-	//char rta[RESPONSE_MAX_LEN];
 	char *rta = malloc(sizeof(char)*1024);
-	memset(rta,'\0',RESPONSE_MAX_LEN);	
+	memset(rta,'\0',TAM_INICIAL);	
 	recibir_mensaje_socket(&socket_cliente, rta,1024);
 	printf("%s",rta); 
 	destruir_socket(&socket_cliente);

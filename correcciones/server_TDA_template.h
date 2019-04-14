@@ -8,12 +8,15 @@
 
 typedef struct template {
 	char* contenido;
-	float* temp;
+	char* contenido_parte1;
+	char* contenido_parte2;
+	int largo_parte1;
+	int largo_parte2;
 } template_t;
 
 //Recibe por parametro una estructura de tipo template_t y un float.
 //Crea un template que tiene como dato el float pasado por parametro
-void crear_template(template_t *template,float temp);
+void crear_template(template_t *template,const char* file_name);
 
 //Recibe por parametro un puntero a un archivo y un puntero de tipo
 //template_t. Lee el archivo y lo copia como dato en el template
@@ -30,7 +33,13 @@ void armar_template(template_t *template,char* file_name);
 //Recibe un puntero a un template_t y lo destruye
 void destruir_template(template_t *template);
 
-char* get_template(template_t *template);
+char* get_template_parte1(template_t *template);
+
+char* get_template_parte2(template_t *template);
+
+int get_largo_parte1(template_t *template);
+
+int get_largo_parte2(template_t *template);
 
 #endif
 

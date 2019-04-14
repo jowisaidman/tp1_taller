@@ -1,6 +1,5 @@
 #define _POSIX_C_SOURCE 200112L
-#define MAX_BUF_LEN 1024
-#define MAX_ANS_LEN 512 
+#define TAM_INICIAL 1024
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -64,6 +63,12 @@ int main(int argc, char *argv[]) {
 	float temp = 0;
 	lista_t lista_clientes;	
 	lista_crear(&lista_clientes);
+
+	//Creo template
+	template_t template_rta;
+	crear_template(&template_rta,argv[3]);
+	armar_template(&template_rta,argv[3]);
+
 	while (continue_running) {
 		socket_connect_t socket_connect_s;
 		is_the_accept_socket_valid = 
@@ -71,9 +76,8 @@ int main(int argc, char *argv[]) {
 		if(!is_the_accept_socket_valid) {
 			continue_running = false;
 		} else {
-			//char buf[MAX_BUF_LEN];
 			char *buf = malloc(sizeof(char)*1024);
-			memset(buf,'\0',MAX_BUF_LEN);	
+			memset(buf,'\0',TAM_INICIAL);	
 			recibir_mensaje_socket(&socket_connect_s, buf,1024);
 			request_t req; 
 			request_crear(&req);
@@ -83,13 +87,17 @@ int main(int argc, char *argv[]) {
 			if (valid_req == 404) {
 				request_destruir(&req);
 				char *error404 = "HTTP/1.1 404 Not found\n\n";
-				enviar_mensaje_socket(&socket_connect_s,error404,strlen(error404));
+				free(buf);
+				enviar_mensaje_socket(&socket_connect_s,error404,strlen(error404)-1);
+				cerrar_canal_escritura(&socket_connect_s);
 				continue;
 			}
 			if (valid_req == 400) {
 				request_destruir(&req);
 				char *error400 = "HTTP/1.1 400 Bad request\n\n";
-				enviar_mensaje_socket(&socket_connect_s,error400,strlen(error400));
+				free(buf);
+				enviar_mensaje_socket(&socket_connect_s,error400,strlen(error400)-1);
+				cerrar_canal_escritura(&socket_connect_s);
 				continue;				
 			}
 			
@@ -107,25 +115,31 @@ int main(int argc, char *argv[]) {
 				continue_running = false;
 			}
 			
-			//creo template
-			template_t template_rta;
-			crear_template(&template_rta,temp);
-			armar_template(&template_rta,argv[3]);
-			char respuesta[MAX_ANS_LEN];
-			snprintf(respuesta,sizeof(char)*MAX_ANS_LEN,"HTTP/1.1 200 OK\n\n%s",
-			get_template(&template_rta));	
-			//aca envio respuesta al cliente
-			enviar_mensaje_socket(&socket_connect_s,respuesta,strlen(respuesta));
+			//envio respuesta
+			char* cabecera = "HTTP/1.1 200 OK\n\n";
+			char temp_[64];
+			enviar_mensaje_socket(&socket_connect_s,cabecera,strlen(cabecera));
+			enviar_mensaje_socket(&socket_connect_s,get_template_parte1(&template_rta),
+			get_largo_parte1(&template_rta));
+			snprintf(temp_,sizeof(temp_), "%.2f", temp);
+			enviar_mensaje_socket(&socket_connect_s,temp_,strlen(temp_));
+			enviar_mensaje_socket(&socket_connect_s,get_template_parte2(&template_rta),
+			get_largo_parte2(&template_rta));
+			cerrar_canal_escritura(&socket_connect_s);
+				
+			//destruyo tdas y libero memoria
 			request_destruir(&req);
-			destruir_template(&template_rta);
 			destruir_sensor_server(&sensor);
 			free(buf);
 			destruir_socket(&socket_connect_s);
 		}
 	}
+
+	//Destruyo el template
+	destruir_template(&template_rta);
+
 	//cierro el socket y lo destruyo
-	is_the_accept_socket_valid = cerrar_socket_accept(&socket_server);
-	destruir_socket_accept(&socket_server);
+	is_the_accept_socket_valid = destruir_socket_accept(&socket_server);
 	
 	//muestro visitantes
 	lista_iter_t lista_iter_clientes;
